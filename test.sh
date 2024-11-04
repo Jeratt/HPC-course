@@ -1,6 +1,6 @@
 #!/bin/bash
 
-prog="lab1"
+prog="a.out"
 ans_file="out.txt"
 tmp_file=".tmp_ans"
 

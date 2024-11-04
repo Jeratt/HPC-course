@@ -17,124 +17,133 @@ int oldInd2New(int Nx, int Ny, int K1, int K2, int i, int j){
 
 void generate(int Nx, int Ny, int K1, int K2, int& N, int*& IA, int*& JA){
     int K = K1 + K2;
-    N = oldInd2New(Nx, Ny, K1, K2, Ny - 1, Nx - 1) + 1;
-    if ((Ny - 1) * Nx + (Nx - 1) % K >= K1){
-        ++N;
-    }
-    int doubled_E = N; // сразу плюсуем главную диагональ
-    cout << "doubled_E: " << doubled_E << endl;
-    int cnt_IA = 0, cnt_JA = 0;
-    int new_I;
-    bool split;
+    int trian_cnt = ((Ny * Nx) / K) * K2 + max(0, (Ny * Nx) % K - K1);
+    int doubled_E = 0;
+    N = Ny * Nx + trian_cnt;
+
+    //int* v_types = new int[N];
+    int* cnt_neigh = new int[N];
 
     for(int i = 0; i < Ny; ++i){
         for(int j = 0; j < Nx; ++j){
-            if (i - 1 >= 0) {
-                ++doubled_E;
-            }
-            if (i + 1 < Ny) {
-                ++doubled_E;
-            }
-            if (j - 1 >= 0) {
-                ++doubled_E;
-            }
-            if (j + 1 < Nx) {
-                ++doubled_E;
-            }
+            int new_I = oldInd2New(Nx, Ny, K1, K2, i, j);
             if ((i * Nx + j) % K >= K1){
-                doubled_E += 2; // если клетка разбивается - +2 ненулевых элемента
-            }
-        }
-    }
+                //v_types[new_I] = 1; // верхний треугольник
+                //v_types[new_I + 1] = 2; // нижний треугольник
 
-    IA = new int[N + 1]; // + 2 т.к. ещё резервируем под последний элемент, равный размеру JA
-    JA = new int[doubled_E];
+                cnt_neigh[new_I] = 2;
+                if (i - 1 >= 0){ // верхний сосед
+                    ++cnt_neigh[new_I];
+                }
+                if (j - 1 >= 0){ // левый сосед
+                    ++cnt_neigh[new_I];
+                }
+                doubled_E += cnt_neigh[new_I];
 
-    // cout << N + 2 << " " << doubled_E << endl;
-
-    for(int i = 0; i < Ny; ++i){
-        for(int j = 0; j < Nx; ++j){
-            split = (i * Nx + j) % K >= K1;
-            if (split){ // если клетка разбивается на треугольники - обработать их вместе
-                new_I = oldInd2New(Nx, Ny, K1, K2, i, j);
-                IA[cnt_IA] = cnt_JA;
-                if (i - 1 >= 0) {
-                    if (((i - 1) * Nx + j) % K >= K1){ // если верхний сосед разбивается на треугольник - соеднинение с правым треугольником
-                        JA[cnt_JA] = oldInd2New(Nx, Ny, K1, K2, i - 1, j) + 1;
-                    }
-                    else{
-                        JA[cnt_JA] = oldInd2New(Nx, Ny, K1, K2, i - 1, j);
-                    }
-                    ++cnt_JA;
+                cnt_neigh[new_I + 1] = 2;
+                if (i + 1 < Ny){ // нижний сосед
+                    ++cnt_neigh[new_I + 1]; 
                 }
-                if (j - 1 >= 0) { // левый сосед
-                    JA[cnt_JA] = new_I - 1;
-                    ++cnt_JA;
+                if (j + 1 < Nx){
+                    ++cnt_neigh[new_I + 1]; // правый сосед
                 }
-                // добавление связи "с собой" - главная диагональ
-                JA[cnt_JA] = new_I;
-                ++cnt_JA;
-                JA[cnt_JA] = new_I + 1; // правый сосед точно есть
-                ++cnt_JA;
-                ++cnt_IA;
-                ++new_I;
-
-                IA[cnt_IA] = cnt_JA;
-                JA[cnt_JA] = new_I - 1; // левый сосед точно есть
-                ++cnt_JA;
-                // добавление связи "с собой" - главная диагональ
-                JA[cnt_JA] = new_I;
-                ++cnt_JA;
-                if (j + 1 < Nx) { // правый сосед
-                    JA[cnt_JA] = new_I + 1;
-                    ++cnt_JA;
-                }
-                if (i + 1 < Ny) { // нижний сосед
-                    JA[cnt_JA] = oldInd2New(Nx, Ny, K1, K2, i + 1, j);
-                    ++cnt_JA;
-                }
-                ++cnt_IA;
+                doubled_E += cnt_neigh[new_I + 1];
             }
             else{
-                new_I = oldInd2New(Nx, Ny, K1, K2, i, j);
-                IA[cnt_IA] = cnt_JA;
-                if (i - 1 >= 0) {
-                    if (((i - 1) * Nx + j) % K >= K1){ // если верхний сосед разбивается на треугольник - соеднинение с правым треугольником
-                        JA[cnt_JA] = oldInd2New(Nx, Ny, K1, K2, i - 1, j) + 1;
-                    }
-                    else{
-                        JA[cnt_JA] = oldInd2New(Nx, Ny, K1, K2, i - 1, j);
-                    }
-                    ++cnt_JA;
+                //v_types[new_I] = 0; // обычная клетка
+                cnt_neigh[new_I] = 1;
+                if (i - 1 >= 0){ // верхний сосед
+                    ++cnt_neigh[new_I];
                 }
-
-                if (j - 1 >= 0) { // левый сосед
-                    JA[cnt_JA] = new_I - 1;
-                    ++cnt_JA;
+                if (i + 1 < Ny){ // нижний сосед
+                    ++cnt_neigh[new_I]; 
                 }
-
-                // добавление связи "с собой" - главная диагональ
-                JA[cnt_JA] = new_I;
-                ++cnt_JA;
-
-                if (j + 1 < Nx) { // правый сосед
-                    JA[cnt_JA] = new_I + 1;
-                    ++cnt_JA;
+                if (j - 1 >= 0){ // левый сосед
+                    ++cnt_neigh[new_I];
                 }
-
-                if (i + 1 < Ny) { // нижний сосед
-                    JA[cnt_JA] = oldInd2New(Nx, Ny, K1, K2, i + 1, j);
-                    ++cnt_JA;
+                if (j + 1 < Nx){
+                    ++cnt_neigh[new_I]; // правый сосед
                 }
-                ++cnt_IA;
+                doubled_E += cnt_neigh[new_I];
             }
         }
     }
-    cout <<"doubled_E: " << doubled_E << "  cnt_JA: " <<  cnt_JA << endl;
 
-    // cout << cnt_IA << "   KEK    "<< cnt_JA << endl;
-    IA[cnt_IA] = doubled_E; // последний элемент IA - число ненулевых в портрете
-    // cout << "TEST 4" << endl;
+    IA = new int[N + 1];
+    JA = new int[doubled_E];
+
+    for(int i = 0; i < N; ++i){
+        if(i == 0){
+            IA[0] = 0;
+        }
+        IA[i] = IA[i - 1] + cnt_neigh[i - 1];
+    }
+    IA[N] = doubled_E;
+
+    for(int i = 0; i < Ny; ++i){
+        for(int j = 0; j < Nx; ++j){
+            int new_I = oldInd2New(Nx, Ny, K1, K2, i, j);
+            if ((i * Nx + j) % K >= K1){
+                int cur_JA = IA[new_I];
+                if (i - 1 >= 0){ // верхний сосед
+                    if (((i - 1) * Nx + j) % K >= K1){ // если сверху треугольник
+                        JA[cur_JA] = oldInd2New(Nx, Ny, K1, K2, i - 1, j) + 1;
+                        ++cur_JA;
+                    }else{
+                        JA[cur_JA] = oldInd2New(Nx, Ny, K1, K2, i - 1, j);
+                        ++cur_JA;
+                    }
+                }
+                if (j - 1 >= 0){ // левый сосед
+                    JA[cur_JA] = new_I - 1;
+                    ++cur_JA;
+                }
+                JA[cur_JA] = new_I; // главная диагональ
+                ++cur_JA;
+                JA[cur_JA] = new_I + 1; // нижний треугольник = правый сосед
+                ++cur_JA;
+                
+                JA[cur_JA] = new_I; // верхний треугольник = левый сосед
+                ++cur_JA;
+                JA[cur_JA] = new_I + 1; // главная диагональ
+                ++cur_JA;
+                if (j + 1 < Nx){ // правый сосед
+                    JA[cur_JA] = new_I + 2;
+                    ++cur_JA; 
+                }
+                if (i + 1 < Ny){ // нижний сосед
+                    JA[cur_JA] = oldInd2New(Nx, Ny, K1, K2, i + 1, j);
+                    ++cur_JA;
+                }            
+            }
+            else{
+                int cur_JA = IA[new_I];
+                if (i - 1 >= 0){ // верхний сосед
+                    if (((i - 1) * Nx + j) % K >= K1){ // если сверху треугольник
+                        JA[cur_JA] = oldInd2New(Nx, Ny, K1, K2, i - 1, j) + 1;
+                        ++cur_JA;
+                    }else{
+                        JA[cur_JA] = oldInd2New(Nx, Ny, K1, K2, i - 1, j);
+                        ++cur_JA;
+                    }
+                }
+                if (j - 1 >= 0){ // левый сосед
+                    JA[cur_JA] = new_I - 1;
+                    ++cur_JA;
+                }
+                JA[cur_JA] = new_I; // главная диагональ
+                ++cur_JA;
+                if (j + 1 < Nx){ // правый сосед
+                    JA[cur_JA] = new_I + 1;
+                    ++cur_JA; 
+                }
+                if (i + 1 < Ny){ // нижний сосед
+                    JA[cur_JA] = oldInd2New(Nx, Ny, K1, K2, i + 1, j);
+                    ++cur_JA;
+                }
+            }
+        }
+    }
 }
 
 
@@ -158,7 +167,6 @@ int main(int argc, char** argv){
     }
     logFile << endl;
     doubled_E = IA[N];
-    cout << doubled_E << endl;
     for (int i = 0; i < doubled_E; ++i){
         logFile << JA[i] << " ";
     }  
@@ -167,8 +175,6 @@ int main(int argc, char** argv){
     inFile.close();
 
     delete [] IA;
-    cout << "TEST Y" << endl;
     delete [] JA;
-    cout << "TEST X" << endl;
     return 0;
 }
