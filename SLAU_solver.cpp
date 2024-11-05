@@ -61,24 +61,13 @@ void vector_fill(int N, double*& x, double alpha){
 }
 
 void get_M(int N, int*& IA, int*& JA, double*& A, double*& M){
-    int* diag = new int[N];
-
     #pragma omp parallel for
     for (int i = 0; i < N; ++i){
         for (int j = IA[i]; j < IA[i + 1]; ++j){
-            diag[i] = j;
-            continue;
+            if (i == JA[j]){
+                M[j] = 1.0 / A[j];
+            }
         }
-    }
-
-
-    #pragma omp parallel for
-    for(int i = 0; i < N; ++i){
-        if (A[diag[i]] == 0){
-            M[diag[i]] = 0;
-            continue;
-        }
-        M[diag[i]] = 1.0 / A[diag[i]];
     }
 }
 
