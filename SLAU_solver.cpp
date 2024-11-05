@@ -3,6 +3,7 @@
 #include <fstream>
 #include <cmath>
 #include <omp.h>
+#include <iomanip>
 
 using namespace std;
 
@@ -204,7 +205,7 @@ void fill(int N, int*& IA, int*& JA, double*& A, double*& b){
 int main(int argc, char** argv){
     int Nx, Ny, K1, K2, N, doubled_E, T;
     int *IA, *JA;
-    double *A, *b;
+    double *A, *b, t;
     ofstream logFile("error_log.txt", ios::out);
     if (!logFile.is_open()){
         return 1;
@@ -217,21 +218,28 @@ int main(int argc, char** argv){
 
     omp_set_num_threads(T);
 
-    logFile << "N: " << N <<endl;
+    //logFile << "N: " << N <<endl;
+
+    t = omp_get_wtime();
     generate(Nx, Ny, K1, K2, N, IA, JA);
-    for (int i = 0; i < N+1; ++i){
-        logFile << IA[i] << " ";
-    }
+    t = omp_get_wtime() - t;
+    logFile << setprecision(3) << "Generate took: " << t << " seconds" << endl;
+    // for (int i = 0; i < N+1; ++i){
+    //     logFile << IA[i] << " ";
+    // }
     logFile << endl;
     doubled_E = IA[N];
-    for (int i = 0; i < doubled_E; ++i){
-        logFile << JA[i] << " ";
-    }  
+    // for (int i = 0; i < doubled_E; ++i){
+    //     logFile << JA[i] << " ";
+    // }  
     logFile << endl;
+    t = omp_get_wtime();
     fill(N, IA, JA, A, b);
-    for (int i = 0; i < doubled_E; ++i){
-        logFile << A[i] << " ";
-    }  
+    t = omp_get_wtime() - t;
+    logFile << setprecision(3) << "Fill took: " << t << " seconds" << endl;
+    // for (int i = 0; i < doubled_E; ++i){
+    //     logFile << A[i] << " ";
+    // }  
 
     logFile.close();
     inFile.close();
