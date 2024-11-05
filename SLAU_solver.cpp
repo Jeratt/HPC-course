@@ -26,7 +26,7 @@ void generate(int Nx, int Ny, int K1, int K2, int& N, int*& IA, int*& JA){
     //int* v_types = new int[N];
     int* cnt_neigh = new int[N];
 
-    #pragma omp parallel
+    #pragma omp parallel for
     for(int i = 0; i < Ny; ++i){
         int doubled_E_local = 0;
         for(int j = 0; j < Nx; ++j){
@@ -93,7 +93,7 @@ void generate(int Nx, int Ny, int K1, int K2, int& N, int*& IA, int*& JA){
     }
     IA[N] = doubled_E;
 
-    #pragma omp parallel
+    #pragma omp parallel for
     for(int i = 0; i < Ny; ++i){
         for(int j = 0; j < Nx; ++j){
             int new_I = oldInd2New(Nx, Ny, K1, K2, i, j);
@@ -167,7 +167,7 @@ void fill(int N, int*& IA, int*& JA, double*& A, double*& b){
     A = new double[IA[N]];
     b = new double[N];
 
-    #pragma omp parallel
+    #pragma omp parallel for
     for (int i = 0; i < N; ++i){
         for (int j = IA[i]; j < IA[i + 1]; ++j){
             if (i == JA[j]){
@@ -179,7 +179,7 @@ void fill(int N, int*& IA, int*& JA, double*& A, double*& b){
         }
     }
 
-    #pragma omp parallel
+    #pragma omp parallel for
     for (int i = 0; i < N; ++i){
         for (int j = IA[i]; j < IA[i + 1]; ++j){
             if (i == JA[j]){
@@ -189,7 +189,7 @@ void fill(int N, int*& IA, int*& JA, double*& A, double*& b){
         }
     }
 
-    #pragma omp parallel
+    #pragma omp parallel for
     for (int i = 0; i < N; ++i){
         A[diag[i]] *= DIAG_COEFF;
         b[i] = sin(i);
