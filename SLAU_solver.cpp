@@ -26,49 +26,51 @@ void generate(int Nx, int Ny, int K1, int K2, int& N, int*& IA, int*& JA){
     //int* v_types = new int[N];
     int* cnt_neigh = new int[N];
 
-    #pragma omp parallel for
-    for(int i = 0; i < Ny; ++i){
+    #pragma omp parallel
+    {
         int doubled_E_local = 0;
-        for(int j = 0; j < Nx; ++j){
-            int new_I = oldInd2New(Nx, Ny, K1, K2, i, j);
-            if ((i * Nx + j) % K >= K1){
-                //v_types[new_I] = 1; // верхний треугольник
-                //v_types[new_I + 1] = 2; // нижний треугольник
+        for(int i = 0; i < Ny; ++i){
+            for(int j = 0; j < Nx; ++j){
+                int new_I = oldInd2New(Nx, Ny, K1, K2, i, j);
+                if ((i * Nx + j) % K >= K1){
+                    //v_types[new_I] = 1; // верхний треугольник
+                    //v_types[new_I + 1] = 2; // нижний треугольник
 
-                cnt_neigh[new_I] = 2;
-                if (i - 1 >= 0){ // верхний сосед
-                    ++cnt_neigh[new_I];
-                }
-                if (j - 1 >= 0){ // левый сосед
-                    ++cnt_neigh[new_I];
-                }
-                doubled_E_local += cnt_neigh[new_I];
+                    cnt_neigh[new_I] = 2;
+                    if (i - 1 >= 0){ // верхний сосед
+                        ++cnt_neigh[new_I];
+                    }
+                    if (j - 1 >= 0){ // левый сосед
+                        ++cnt_neigh[new_I];
+                    }
+                    doubled_E_local += cnt_neigh[new_I];
 
-                cnt_neigh[new_I + 1] = 2;
-                if (i + 1 < Ny){ // нижний сосед
-                    ++cnt_neigh[new_I + 1]; 
+                    cnt_neigh[new_I + 1] = 2;
+                    if (i + 1 < Ny){ // нижний сосед
+                        ++cnt_neigh[new_I + 1]; 
+                    }
+                    if (j + 1 < Nx){
+                        ++cnt_neigh[new_I + 1]; // правый сосед
+                    }
+                    doubled_E_local += cnt_neigh[new_I + 1];
                 }
-                if (j + 1 < Nx){
-                    ++cnt_neigh[new_I + 1]; // правый сосед
+                else{
+                    //v_types[new_I] = 0; // обычная клетка
+                    cnt_neigh[new_I] = 1;
+                    if (i - 1 >= 0){ // верхний сосед
+                        ++cnt_neigh[new_I];
+                    }
+                    if (i + 1 < Ny){ // нижний сосед
+                        ++cnt_neigh[new_I]; 
+                    }
+                    if (j - 1 >= 0){ // левый сосед
+                        ++cnt_neigh[new_I];
+                    }
+                    if (j + 1 < Nx){
+                        ++cnt_neigh[new_I]; // правый сосед
+                    }
+                    doubled_E_local += cnt_neigh[new_I];
                 }
-                doubled_E_local += cnt_neigh[new_I + 1];
-            }
-            else{
-                //v_types[new_I] = 0; // обычная клетка
-                cnt_neigh[new_I] = 1;
-                if (i - 1 >= 0){ // верхний сосед
-                    ++cnt_neigh[new_I];
-                }
-                if (i + 1 < Ny){ // нижний сосед
-                    ++cnt_neigh[new_I]; 
-                }
-                if (j - 1 >= 0){ // левый сосед
-                    ++cnt_neigh[new_I];
-                }
-                if (j + 1 < Nx){
-                    ++cnt_neigh[new_I]; // правый сосед
-                }
-                doubled_E_local += cnt_neigh[new_I];
             }
         }
 
