@@ -101,6 +101,18 @@ double solve(int N, int*& IA, int*& JA, double*& A, double*& b, double eps, int 
         SpMv(N, IA, JA, M, r_k_prev, z_k);
         ro_k = dot(N, r_k_prev, z_k);
 
+        cout<< "ro_k on "<<k<<" iteration: ";
+        cout << ro_k << endl << "R_k_prev: ";
+        for(int i = 0; i < N; ++i){
+            cout << r_k_prev[i] << " ";
+        }
+        cout<<endl << "b: ";
+        for(int i = 0; i < N; ++i){
+            cout << b[i] << " ";
+        }
+        cout<<endl;
+
+
         if(k == 1){
             vector_cp(N, p_k, z_k);
             vector_cp(N, p_k_prev, p_k);
