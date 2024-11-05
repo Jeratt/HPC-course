@@ -98,12 +98,11 @@ double solve(int N, int*& IA, int*& JA, double*& A, double*& b, double eps, int 
     vector_cp(N, r_k_prev, b); // r_0
 
     // TEST
-    t = omp_get_wtime();
-    dot(N, r_k_prev, x_k_prev);
-    t = omp_get_wtime() - t;
-    cout << "dot took: " << setprecision(3) << t << " seconds" << endl;
+    // t = omp_get_wtime();
+    // dot(N, r_k_prev, x_k_prev);
+    // t = omp_get_wtime() - t;
+    // cout << "dot took: " << setprecision(3) << t << " seconds" << endl;
 
-    /*
 
     do{
         ++k;
@@ -142,7 +141,6 @@ double solve(int N, int*& IA, int*& JA, double*& A, double*& b, double eps, int 
     n = k;
 
     return l2(N, r_k);
-    */
 
     delete [] x_k;
     delete [] r_k;
@@ -398,7 +396,11 @@ int main(int argc, char** argv){
     //     logFile << A[i] << " ";
     // }  
 
+    t = omp_get_wtime();
     res = solve(N, IA, JA, A, b, EPS, MAXIT, x, n);
+    t = omp_get_wtime() - t;
+
+    cout << "Solve took: " << setprecision(3) << t << " seconds" << endl;
 
     // for(int i = 0; i < N; ++i){
     //     logFile << x[i] << " ";
