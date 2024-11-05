@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <iostream> // TEST
 #include <fstream>
+#include <cmath>
 
 using namespace std;
 
@@ -146,11 +147,45 @@ void generate(int Nx, int Ny, int K1, int K2, int& N, int*& IA, int*& JA){
     }
 }
 
+void fill(int N, int*& IA, int*& JA, double*& A, double*& b){
+    double DIAG_COEFF = 1.234;
+
+    int* diag = new int[N];
+    A = new double[IA[N]];
+    b = new double[N];
+
+    for (int i = 0; i < N; ++i){
+        for (int j = IA[i]; j < IA[i + 1]; ++j){
+            if (i == JA[j]){
+                diag[i] = j;
+                A[j] = 0;
+                continue;
+            }
+            A[j] = cos(i * JA[j] + i + JA[j]);
+        }
+    }
+
+    for (int i = 0; i < N; ++i){
+        for (int j = IA[i]; j < IA[i + 1]; ++j){
+            if (i == JA[j]){
+                continue;
+            }
+            A[diag[i]] += abs(A[j]);
+        }
+    }
+
+    for (int i = 0; i < N; ++i){
+        A[diag[i]] *= DIAG_COEFF;
+        b[i] = sin(i);
+    }
+}
+
 
 
 int main(int argc, char** argv){
     int Nx, Ny, K1, K2, N, doubled_E;
     int *IA, *JA;
+    double *A, *b;
     ofstream logFile("error_log.txt", ios::out);
     if (!logFile.is_open()){
         return 1;
@@ -169,6 +204,11 @@ int main(int argc, char** argv){
     doubled_E = IA[N];
     for (int i = 0; i < doubled_E; ++i){
         logFile << JA[i] << " ";
+    }  
+    logFile << endl;
+    fill(N, IA, JA, A, b);
+    for (int i = 0; i < doubled_E; ++i){
+        logFile << A[i] << " ";
     }  
 
     logFile.close();
