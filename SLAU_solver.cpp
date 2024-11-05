@@ -119,6 +119,8 @@ double solve(int N, int*& IA, int*& JA, double*& A, double*& b, double eps, int 
         vector_cp(N, x_k_prev, x_k);
         axpy(N, -alpha_k, q_k, r_k_prev, r_k);
         vector_cp(N, r_k_prev, r_k);
+
+        cout << "Iter: " << k << endl;
     }
     while(ro_k > eps * eps && k < maxit);
 
