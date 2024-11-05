@@ -364,7 +364,8 @@ int main(int argc, char** argv){
         return 1;
     }
     if (argc < 2){
-        // TODO print help
+        cout << "Введите один параметр входной строки - имя входного файла.\n Во входном файле ожидаются значения: Nx, Ny, K1, K2, T. Например: 2000 2000 3 3 8"<<endl;
+        cout << "На выходе создаётся файл output_log.txt с отладочной информацией" << endl;
     }
     ifstream inFile(argv[1], ios::in);
     inFile >> Nx >> Ny >> K1 >> K2 >> T;
@@ -396,12 +397,11 @@ int main(int argc, char** argv){
     //     logFile << A[i] << " ";
     // }  
 
-    // Uncomment later
-    // t = omp_get_wtime();
-    // res = solve(N, IA, JA, A, b, EPS, MAXIT, x, n);
-    // t = omp_get_wtime() - t;
+    t = omp_get_wtime();
+    res = solve(N, IA, JA, A, b, EPS, MAXIT, x, n);
+    t = omp_get_wtime() - t;
 
-    // cout << "Solve took: " << setprecision(3) << t << " seconds" << endl;
+    cout << "Solve took: " << setprecision(3) << t << " seconds" << endl;
 
     // for(int i = 0; i < N; ++i){
     //     logFile << x[i] << " ";
@@ -414,6 +414,6 @@ int main(int argc, char** argv){
     delete [] JA;
     delete [] A;
     delete [] b;
-    //delete [] x;
+    delete [] x;
     return 0;
 }
