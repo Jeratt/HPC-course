@@ -103,18 +103,6 @@ double solve(int N, int*& IA, int*& JA, double*& A, double*& b, double eps, int 
         SpMv(N, IA, JA, M, r_k_prev, z_k);
         ro_k = dot(N, r_k_prev, z_k);
         
-        // cout<<"N: " << N << endl;
-        // cout<< "ro_k on "<<k<<" iteration: ";
-        // cout << ro_k << endl << "R_k_prev: ";
-        // for(int i = 0; i < N; ++i){
-        //     cout << r_k_prev[i] << " ";
-        // }
-        // cout<<endl << "b: ";
-        // for(int i = 0; i < N; ++i){
-        //     cout << b[i] << " ";
-        // }
-        // cout<<endl;
-
 
         if(k == 1){
             vector_cp(N, p_k, z_k);
@@ -131,33 +119,12 @@ double solve(int N, int*& IA, int*& JA, double*& A, double*& b, double eps, int 
         alpha_k = ro_k / dot(N, p_k, q_k);
         //vector_cp(N, tmp, x_k);
 
-        cout <<"alpha: " << alpha_k << "   x_prev: ";
-        for(int i = 0; i < N; ++i){
-            cout << x_k_prev[i] << " ";
-        }        
-        cout << endl;
-
-        cout <<"p_k: ";
-        for(int i = 0; i < N; ++i){
-            cout << p_k[i] << " ";
-        }        
-        cout << endl;
-
         axpy(N, alpha_k, p_k, x_k_prev, x_k);
         vector_cp(N, x_k_prev, x_k);
         axpy(N, -alpha_k, q_k, r_k_prev, r_k);
         vector_cp(N, r_k_prev, r_k);
 
         ro_k_prev = ro_k;
-
-        cout << "Iter: " << k << endl;
-
-        cout<< "X on "<<k<<" iteration: ";
-        for(int i = 0; i < N; ++i){
-            cout << x_k[i] << " ";
-        }
-        cout<<endl;
-        cout<<endl;
     }
     while(ro_k > eps * eps && k < maxit);
 
