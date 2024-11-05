@@ -382,6 +382,8 @@ int main(int argc, char** argv){
     fill(N, IA, JA, A, b);
     t = omp_get_wtime() - t;
     logFile << setprecision(3) << "Fill took: " << t << " seconds" << endl;
+
+    logFile << "N: " << N << endl;
     // for (int i = 0; i < doubled_E; ++i){
     //     logFile << A[i] << " ";
     // }  
