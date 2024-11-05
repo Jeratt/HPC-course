@@ -7,6 +7,140 @@
 
 using namespace std;
 
+void SpMv(int N, int*& IA, int*& JA, double*& A, double*& x, double*& ans){
+    #pragma omp parallel for
+    for(int i = 0; i < N; ++i){
+        double cur_sum = 0;
+        for (int j = IA[i]; j < IA[i + 1]; ++j){
+            cur_sum += A[j] * x[JA[j]];
+        }
+        ans[i] = cur_sum;
+    }
+}
+
+double dot(int N, double*& x, double*& y){
+    double out = 0;
+    #pragma omp parallel
+    {
+        double cur_res = 0;
+        #pragma omp for
+        for (int i = 0; i < N; ++i){
+            cur_res += x[i] * y[i];
+        }
+        const int nt = omp_get_num_threads();
+        const int tn = omp_get_thread_num();
+        for(int i = 0; i < nt; ++i){
+            #pragma omp barrier
+            if (i == tn){
+                out += cur_res;
+            }
+        }
+    }
+    return out;
+}
+
+void axpy(int N, double alpha, double*& x, double*& y, double*& ans) {
+    #pragma omp parallel for
+    for (int i = 0; i < N; ++i) {
+        ans[i] = alpha * x[i] + y[i];  
+    }
+}
+
+void vector_cp(int N, double*& dest, double*& src){
+    #pragma omp parallel for
+    for (int i = 0; i < N; ++i){
+        dest[i] = src[i];
+    }
+}
+
+void vector_fill(int N, double*& x, double alpha){
+    #pragma omp parallel for
+    for (int i = 0; i < N; ++i){
+        x[i] = alpha;
+    }
+}
+
+void get_M(int N, double*& A, double*& M){
+    #pragma omp parallel for
+    for(int i = 0; i < N; ++i){
+        if (A[i] == 0){
+            continue;
+        }
+        M[i] = 1.0 / A[i];
+    }
+}
+
+double l2(int N, double*& x){
+    double res = 0;
+    for(int i = 0; i < N; ++i){
+        res += x[i] * x[i];
+    }
+    return sqrt(res);
+}
+
+double solve(int N, int*& IA, int*& JA, double*& A, double*& b, double eps, int maxit, double*& x, int &n){
+    int k = 0;
+    double *x_k, *r_k, *M, *z_k, *p_k, *q_k, *x_k_prev, *p_k_prev, *r_k_prev, *tmp, ro_k, ro_k_prev, beta_k, alpha_k;
+    x_k = new double[N];
+    r_k = new double[N];
+    M = new double[IA[N]];
+    z_k = new double[N];
+    p_k = new double[N];
+    q_k = new double[N];
+    x_k_prev = new double[N];
+    p_k_prev = new double[N];
+    r_k_prev = new double[N];
+    //tmp = new double[N];
+
+    vector_fill(N, x_k_prev, 0); // x_0
+    //vector_fill(N, x_k, 0); // for prev
+    vector_cp(N, r_k_prev, b); // r_0
+    do{
+        ++k;
+        get_M(N, A, M);
+        SpMv(N, IA, JA, M, r_k_prev, z_k);
+        ro_k = dot(N, r_k_prev, z_k);
+
+        if(k == 1){
+            vector_cp(N, p_k, z_k);
+            vector_cp(N, p_k_prev, p_k);
+        }
+        else{
+            beta_k = ro_k / ro_k_prev;
+            //vector_cp(N, tmp, p_k);
+            axpy(N, beta_k, p_k_prev, z_k, p_k);
+            vector_cp(N, p_k_prev, p_k);
+        }
+
+        SpMv(N, IA, JA, A, p_k, q_k);
+        alpha_k = ro_k / dot(N, p_k, q_k);
+        //vector_cp(N, tmp, x_k);
+        axpy(N, alpha_k, p_k, x_k_prev, x_k);
+        vector_cp(N, x_k_prev, x_k);
+        axpy(N, -alpha_k, q_k, r_k_prev, r_k);
+        vector_cp(N, r_k_prev, r_k);
+    }
+    while(ro_k > eps * eps && k < maxit);
+
+    x = new double[N];
+    vector_cp(N, x, x_k);
+    n = k;
+
+    return l2(N, r_k);
+
+    delete [] x_k;
+    delete [] r_k;
+    delete [] M;
+    delete [] z_k;
+    delete [] p_k;
+    delete [] q_k;
+    delete [] x_k_prev;
+    delete [] p_k_prev;
+    delete [] r_k_prev;
+    //delete [] tmp;
+}
+
+
 int oldInd2New(int Nx, int Ny, int K1, int K2, int i, int j){
     int I, n, r, trian_cnt, new_I;
     int K = K1 + K2;
@@ -203,9 +337,12 @@ void fill(int N, int*& IA, int*& JA, double*& A, double*& b){
 
 
 int main(int argc, char** argv){
-    int Nx, Ny, K1, K2, N, doubled_E, T;
+    double EPS = 1e-5;
+    int MAXIT = 100;
+
+    int Nx, Ny, K1, K2, N, doubled_E, T, n;
     int *IA, *JA;
-    double *A, *b, t;
+    double *A, *b, *x, t, res;
     ofstream logFile("error_log.txt", ios::out);
     if (!logFile.is_open()){
         return 1;
@@ -241,10 +378,19 @@ int main(int argc, char** argv){
     //     logFile << A[i] << " ";
     // }  
 
+    res = solve(N, IA, JA, A, b, EPS, MAXIT, x, n);
+
+    for(int i = 0; i < N; ++i){
+        logFile << x[i] << " ";
+    }
+
     logFile.close();
     inFile.close();
 
     delete [] IA;
     delete [] JA;
+    delete [] A;
+    delete [] b;
+    delete [] x;
     return 0;
 }
