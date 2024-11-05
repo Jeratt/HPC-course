@@ -101,17 +101,17 @@ double solve(int N, int*& IA, int*& JA, double*& A, double*& b, double eps, int 
         SpMv(N, IA, JA, M, r_k_prev, z_k);
         ro_k = dot(N, r_k_prev, z_k);
         
-        cout<<"N: " << N << endl;
-        cout<< "ro_k on "<<k<<" iteration: ";
-        cout << ro_k << endl << "R_k_prev: ";
-        for(int i = 0; i < N; ++i){
-            cout << r_k_prev[i] << " ";
-        }
-        cout<<endl << "b: ";
-        for(int i = 0; i < N; ++i){
-            cout << b[i] << " ";
-        }
-        cout<<endl;
+        // cout<<"N: " << N << endl;
+        // cout<< "ro_k on "<<k<<" iteration: ";
+        // cout << ro_k << endl << "R_k_prev: ";
+        // for(int i = 0; i < N; ++i){
+        //     cout << r_k_prev[i] << " ";
+        // }
+        // cout<<endl << "b: ";
+        // for(int i = 0; i < N; ++i){
+        //     cout << b[i] << " ";
+        // }
+        // cout<<endl;
 
 
         if(k == 1){
@@ -128,6 +128,19 @@ double solve(int N, int*& IA, int*& JA, double*& A, double*& b, double eps, int 
         SpMv(N, IA, JA, A, p_k, q_k);
         alpha_k = ro_k / dot(N, p_k, q_k);
         //vector_cp(N, tmp, x_k);
+
+        cout <<"alpha: " << alpha_k << "   x_prev: ";
+        for(int i = 0; i < N; ++i){
+            cout << x_k_prev[i] << " ";
+        }        
+        cout << endl;
+
+        cout <<"p_k: ";
+        for(int i = 0; i < N; ++i){
+            cout << p_k[i] << " ";
+        }        
+        cout << endl;
+
         axpy(N, alpha_k, p_k, x_k_prev, x_k);
         vector_cp(N, x_k_prev, x_k);
         axpy(N, -alpha_k, q_k, r_k_prev, r_k);
