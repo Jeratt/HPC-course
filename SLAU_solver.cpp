@@ -102,6 +102,7 @@ double solve(int N, int*& IA, int*& JA, double*& A, double*& b, double eps, int 
     t = omp_get_wtime();
     SpMv(N, IA, JA, M, r_k_prev, z_k);
     t = omp_get_wtime() - t;
+    cout << "SpMv took: " << setprecision(3) << t << " seconds" << endl;
 
     /*
 
