@@ -388,9 +388,9 @@ int main(int argc, char** argv){
 
     res = solve(N, IA, JA, A, b, EPS, MAXIT, x, n);
 
-    for(int i = 0; i < N; ++i){
-        logFile << x[i] << " ";
-    }
+    // for(int i = 0; i < N; ++i){
+    //     logFile << x[i] << " ";
+    // }
 
     logFile.close();
     inFile.close();
