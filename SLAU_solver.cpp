@@ -60,13 +60,25 @@ void vector_fill(int N, double*& x, double alpha){
     }
 }
 
-void get_M(int N, double*& A, double*& M){
+void get_M(int N, int*& IA, int*& JA, double*& A, double*& M){
+    int* diag = new int[N];
+
     #pragma omp parallel for
-    for(int i = 0; i < N; ++i){
-        if (A[i] == 0){
+    for (int i = 0; i < N; ++i){
+        for (int j = IA[i]; j < IA[i + 1]; ++j){
+            diag[i] = j;
             continue;
         }
-        M[i] = 1.0 / A[i];
+    }
+
+
+    #pragma omp parallel for
+    for(int i = 0; i < N; ++i){
+        if (A[diag[i]] == 0){
+            M[diag[i]] = 0;
+            continue;
+        }
+        M[diag[i]] = 1.0 / A[diag[i]];
     }
 }
 
@@ -97,7 +109,8 @@ double solve(int N, int*& IA, int*& JA, double*& A, double*& b, double eps, int 
     vector_cp(N, r_k_prev, b); // r_0
     do{
         ++k;
-        get_M(N, A, M);
+        vector_fill(IA[N], M, 0);
+        get_M(N, IA, JA, A, M);
         SpMv(N, IA, JA, M, r_k_prev, z_k);
         ro_k = dot(N, r_k_prev, z_k);
         
@@ -369,6 +382,8 @@ void fill(int N, int*& IA, int*& JA, double*& A, double*& b){
         A[diag[i]] *= DIAG_COEFF;
         b[i] = sin(i);
     }
+
+    delete [] diag;
 }
 
 
