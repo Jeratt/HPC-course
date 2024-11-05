@@ -81,7 +81,7 @@ double l2(int N, double*& x){
 
 double solve(int N, int*& IA, int*& JA, double*& A, double*& b, double eps, int maxit, double*& x, int &n){
     int k = 0;
-    double *x_k, *r_k, *M, *z_k, *p_k, *q_k, *x_k_prev, *p_k_prev, *r_k_prev, *tmp, ro_k, ro_k_prev, beta_k, alpha_k;
+    double *x_k, *r_k, *M, *z_k, *p_k, *q_k, *x_k_prev, *p_k_prev, *r_k_prev, *tmp, ro_k, ro_k_prev, beta_k, alpha_k, t;
     x_k = new double[N];
     r_k = new double[N];
     M = new double[IA[N]];
@@ -96,6 +96,15 @@ double solve(int N, int*& IA, int*& JA, double*& A, double*& b, double eps, int 
     vector_fill(N, x_k_prev, 0); // x_0
     //vector_fill(N, x_k, 0); // for prev
     vector_cp(N, r_k_prev, b); // r_0
+
+    // TEST
+    cout << "doubled_E: " << IA[N] << endl;
+    t = omp_get_wtime();
+    SpMv(N, IA, JA, M, r_k_prev, z_k);
+    t = omp_get_wtime() - t;
+
+    /*
+
     do{
         ++k;
         vector_fill(IA[N], M, 0);
@@ -133,6 +142,7 @@ double solve(int N, int*& IA, int*& JA, double*& A, double*& b, double eps, int 
     n = k;
 
     return l2(N, r_k);
+    */
 
     delete [] x_k;
     delete [] r_k;
@@ -351,7 +361,7 @@ int main(int argc, char** argv){
     int Nx, Ny, K1, K2, N, doubled_E, T, n;
     int *IA, *JA;
     double *A, *b, *x, t, res;
-    ofstream logFile("error_log.txt", ios::out);
+    ofstream logFile("output_log.txt", ios::out);
     if (!logFile.is_open()){
         return 1;
     }
@@ -388,7 +398,7 @@ int main(int argc, char** argv){
     //     logFile << A[i] << " ";
     // }  
 
-    // res = solve(N, IA, JA, A, b, EPS, MAXIT, x, n);
+    res = solve(N, IA, JA, A, b, EPS, MAXIT, x, n);
 
     // for(int i = 0; i < N; ++i){
     //     logFile << x[i] << " ";
@@ -401,6 +411,6 @@ int main(int argc, char** argv){
     delete [] JA;
     delete [] A;
     delete [] b;
-    // delete [] x;
+    //delete [] x;
     return 0;
 }
