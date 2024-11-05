@@ -396,11 +396,12 @@ int main(int argc, char** argv){
     //     logFile << A[i] << " ";
     // }  
 
-    t = omp_get_wtime();
-    res = solve(N, IA, JA, A, b, EPS, MAXIT, x, n);
-    t = omp_get_wtime() - t;
+    // Uncomment later
+    // t = omp_get_wtime();
+    // res = solve(N, IA, JA, A, b, EPS, MAXIT, x, n);
+    // t = omp_get_wtime() - t;
 
-    cout << "Solve took: " << setprecision(3) << t << " seconds" << endl;
+    // cout << "Solve took: " << setprecision(3) << t << " seconds" << endl;
 
     // for(int i = 0; i < N; ++i){
     //     logFile << x[i] << " ";
