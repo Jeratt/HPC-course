@@ -29,6 +29,7 @@ void generate(int Nx, int Ny, int K1, int K2, int& N, int*& IA, int*& JA){
     #pragma omp parallel
     {
         int doubled_E_local = 0;
+        #pragma omp for
         for(int i = 0; i < Ny; ++i){
             for(int j = 0; j < Nx; ++j){
                 int new_I = oldInd2New(Nx, Ny, K1, K2, i, j);
