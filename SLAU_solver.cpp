@@ -216,6 +216,7 @@ int main(int argc, char** argv){
 
     omp_set_num_threads(T);
 
+    logFile << "N: " << N <<endl;
     generate(Nx, Ny, K1, K2, N, IA, JA);
     for (int i = 0; i < N+1; ++i){
         logFile << IA[i] << " ";
