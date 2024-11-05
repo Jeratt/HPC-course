@@ -99,9 +99,9 @@ double solve(int N, int*& IA, int*& JA, double*& A, double*& b, double eps, int 
 
     // TEST
     t = omp_get_wtime();
-    axpy(N, 1.23, r_k_prev, x_k_prev, p_k);
+    dot(N, r_k_prev, x_k_prev);
     t = omp_get_wtime() - t;
-    cout << "axpy took: " << setprecision(3) << t << " seconds" << endl;
+    cout << "dot took: " << setprecision(3) << t << " seconds" << endl;
 
     /*
 
