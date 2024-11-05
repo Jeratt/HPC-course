@@ -121,6 +121,12 @@ double solve(int N, int*& IA, int*& JA, double*& A, double*& b, double eps, int 
         vector_cp(N, r_k_prev, r_k);
 
         cout << "Iter: " << k << endl;
+
+        cout<< "X on "<<k<<" iteration: ";
+        for(int i = 0; i < N; ++i){
+            cout << x_k[i] << " ";
+        }
+        cout<<endl;
     }
     while(ro_k > eps * eps && k < maxit);
 
