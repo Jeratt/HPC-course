@@ -401,6 +401,6 @@ int main(int argc, char** argv){
     delete [] JA;
     delete [] A;
     delete [] b;
-    delete [] x;
+    // delete [] x;
     return 0;
 }
