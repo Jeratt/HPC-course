@@ -100,7 +100,8 @@ double solve(int N, int*& IA, int*& JA, double*& A, double*& b, double eps, int 
         get_M(N, A, M);
         SpMv(N, IA, JA, M, r_k_prev, z_k);
         ro_k = dot(N, r_k_prev, z_k);
-
+        
+        cout<<"N: " << N << endl;
         cout<< "ro_k on "<<k<<" iteration: ";
         cout << ro_k << endl << "R_k_prev: ";
         for(int i = 0; i < N; ++i){
@@ -140,6 +141,7 @@ double solve(int N, int*& IA, int*& JA, double*& A, double*& b, double eps, int 
         for(int i = 0; i < N; ++i){
             cout << x_k[i] << " ";
         }
+        cout<<endl;
         cout<<endl;
     }
     while(ro_k > eps * eps && k < maxit);
