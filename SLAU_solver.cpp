@@ -359,14 +359,14 @@ int main(int argc, char** argv){
     generate(Nx, Ny, K1, K2, N, IA, JA);
     t = omp_get_wtime() - t;
     logFile << setprecision(3) << "Generate took: " << t << " seconds" << endl;
-    // for (int i = 0; i < N+1; ++i){
-    //     logFile << IA[i] << " ";
-    // }
+    for (int i = 0; i < N+1; ++i){
+        logFile << IA[i] << " ";
+    }
     logFile << endl;
     doubled_E = IA[N];
-    // for (int i = 0; i < doubled_E; ++i){
-    //     logFile << JA[i] << " ";
-    // }  
+    for (int i = 0; i < doubled_E; ++i){
+        logFile << JA[i] << " ";
+    }  
     logFile << endl;
     t = omp_get_wtime();
     fill(N, IA, JA, A, b);
@@ -374,9 +374,9 @@ int main(int argc, char** argv){
     logFile << setprecision(3) << "Fill took: " << t << " seconds" << endl;
 
     logFile << "N: " << N << endl;
-    // for (int i = 0; i < doubled_E; ++i){
-    //     logFile << A[i] << " ";
-    // }  
+    for (int i = 0; i < doubled_E; ++i){
+        logFile << A[i] << " ";
+    }  
 
     t = omp_get_wtime();
     res = solve(N, IA, JA, A, b, EPS, MAXIT, x, n);
@@ -384,9 +384,9 @@ int main(int argc, char** argv){
 
     cout << "Solve took: " << setprecision(3) << t << " seconds" << endl;
 
-    // for(int i = 0; i < N; ++i){
-    //     logFile << x[i] << " ";
-    // }
+    for(int i = 0; i < N; ++i){
+        logFile << x[i] << " ";
+    }
 
     logFile.close();
     inFile.close();
