@@ -20,20 +20,11 @@ void SpMv(int N, int*& IA, int*& JA, double*& A, double*& x, double*& ans){
 
 double dot(int N, double*& x, double*& y){
     double out = 0;
-    #pragma omp parallel
+    #pragma omp parallel reduction(+:out)
     {
-        double cur_res = 0;
         #pragma omp for
         for (int i = 0; i < N; ++i){
-            cur_res += x[i] * y[i];
-        }
-        const int nt = omp_get_num_threads();
-        const int tn = omp_get_thread_num();
-        for(int i = 0; i < nt; ++i){
-            #pragma omp barrier
-            if (i == tn){
-                out += cur_res;
-            }
+            out += x[i] * y[i];
         }
     }
     return out;
@@ -177,8 +168,7 @@ void generate(int Nx, int Ny, int K1, int K2, int& N, int*& IA, int*& JA){
 
     #pragma omp parallel
     {
-        int doubled_E_local = 0;
-        #pragma omp for
+        #pragma omp for reduction(+:doubled_E)
         for(int i = 0; i < Ny; ++i){
             for(int j = 0; j < Nx; ++j){
                 int new_I = oldInd2New(Nx, Ny, K1, K2, i, j);
@@ -193,7 +183,7 @@ void generate(int Nx, int Ny, int K1, int K2, int& N, int*& IA, int*& JA){
                     if (j - 1 >= 0){ // левый сосед
                         ++cnt_neigh[new_I];
                     }
-                    doubled_E_local += cnt_neigh[new_I];
+                    doubled_E += cnt_neigh[new_I];
 
                     cnt_neigh[new_I + 1] = 2;
                     if (i + 1 < Ny){ // нижний сосед
@@ -202,7 +192,7 @@ void generate(int Nx, int Ny, int K1, int K2, int& N, int*& IA, int*& JA){
                     if (j + 1 < Nx){
                         ++cnt_neigh[new_I + 1]; // правый сосед
                     }
-                    doubled_E_local += cnt_neigh[new_I + 1];
+                    doubled_E += cnt_neigh[new_I + 1];
                 }
                 else{
                     //v_types[new_I] = 0; // обычная клетка
@@ -219,17 +209,8 @@ void generate(int Nx, int Ny, int K1, int K2, int& N, int*& IA, int*& JA){
                     if (j + 1 < Nx){
                         ++cnt_neigh[new_I]; // правый сосед
                     }
-                    doubled_E_local += cnt_neigh[new_I];
+                    doubled_E += cnt_neigh[new_I];
                 }
-            }
-        }
-
-        const int nt = omp_get_num_threads();
-        const int tn = omp_get_thread_num();
-        for(int i = 0; i < nt; ++i){
-            #pragma omp barrier
-            if (i == tn){
-                doubled_E += doubled_E_local;
             }
         }
     }

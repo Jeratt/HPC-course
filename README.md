@@ -1,2 +1,4 @@
-# HPC-course
-High-performance computing course. MSU CMC 9 semester
+Программа принимает имя входного файла
+В нём ожидается 5 чисел - Nx, Ny, K1, K2, T
+
+Сборка - g++ ./SLAU_solver.cpp -fopenmp -o a.out
