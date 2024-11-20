@@ -11,10 +11,10 @@ for n in N_grid:
                 fin.write(f"#BSUB -R \"affinity[core({t})]\"\n")
             else:
                 fin.write(f"#BSUB -R \"affinity[core({16})]\"\n")
-            fin.write(f"OMP_NUM_THREADS={t}\n")
+            fin.write(f"OMP_NUM_THREADS={t} /polusfs/lsf/openmp/launchOpenMP.py ../a.out {n} {n} 3 3 {t}\n")
             # if t < 16:
             #     fin.write(f"#BSUB -R \"affinity[core({t})]\"\n")
             # else:
             #     fin.write(f"#BSUB -R \"affinity[core(8)]\"\n")
             #     fin.write(f"OMP_NUM_THREADS={t}\n")
-            fin.write(f"/polusfs/lsf/openmp/launchOpenMP.py ../a.out {n} {n} 3 3 {t}")
+            # fin.write(f"/polusfs/lsf/openmp/launchOpenMP.py ../a.out {n} {n} 3 3 {t}")
