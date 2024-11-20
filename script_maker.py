@@ -6,7 +6,7 @@ for n in N_grid:
         with open(f"solver_job_{n}_{t}.lsf", 'w') as fin:
             fin.write("#BSUB -J \"OpenMP_job\"\n")
             fin.write("#BSUB -o \"OpenMP_job%J.out\"\n")
-            fin.write("BSUB -e \"OpenMP_job%J.err\"\n")
+            fin.write("#BSUB -e \"OpenMP_job%J.err\"\n")
             if t < 16:
                 fin.write(f"#BSUB -R \"affinity[core({t})]\"\n")
             else:
