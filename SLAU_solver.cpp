@@ -344,12 +344,26 @@ int main(int argc, char** argv){
     if (!logFile.is_open()){
         return 1;
     }
-    if (argc < 2){
-        cout << "Введите один параметр входной строки - имя входного файла.\n Во входном файле ожидаются значения: Nx, Ny, K1, K2, T. Например: 2000 2000 3 3 8"<<endl;
+    if (argc < 6){
+        cout << "Запуск программы должен осуществляться в виде <program> Nx Ny K1 K2 T, где Nx, Ny - параметры расчётной сетки, K1, K2 - параметры разбиения на треугольники, T - число потоков"<<endl;
         cout << "На выходе создаётся файл output_log.txt с отладочной информацией" << endl;
+        return 2;
     }
-    ifstream inFile(argv[1], ios::in);
-    inFile >> Nx >> Ny >> K1 >> K2 >> T;
+    Nx = atoi(argv[1]);
+    Ny = atoi(argv[2]);
+    K1 = atoi(argv[3]);
+    K2 = atoi(argv[4]);
+    T = atoi(argv[5]);
+    if (Nx == 0 || Ny == 0 || K1 == 0 || K2 == 0 || T == 0){
+        cout <<"Введены некорректные параметры. Запустите программу без параметров, чтобы увидеть help";
+        return 3;
+    }
+    // if (argc < 2){
+    //     cout << "Введите один параметр входной строки - имя входного файла.\n Во входном файле ожидаются значения: Nx, Ny, K1, K2, T. Например: 2000 2000 3 3 8"<<endl;
+    //     cout << "На выходе создаётся файл output_log.txt с отладочной информацией" << endl;
+    // }
+    // ifstream inFile(argv[1], ios::in);
+    // inFile >> Nx >> Ny >> K1 >> K2 >> T;
 
     omp_set_num_threads(T);
 
@@ -389,7 +403,7 @@ int main(int argc, char** argv){
     }
 
     logFile.close();
-    inFile.close();
+    // inFile.close();
 
     delete [] IA;
     delete [] JA;
