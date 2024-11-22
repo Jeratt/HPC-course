@@ -89,22 +89,22 @@ double solve(int N, int*& IA, int*& JA, double*& A, double*& b, double eps, int 
     vector_cp(N, r_k_prev, b); // r_0
 
     // TEST
-    cout << "doubled_E: " << IA[N] << endl;
+    // cout << "doubled_E: " << IA[N] << endl;
 
-    t = omp_get_wtime();
-    SpMv(N, IA, JA, M, r_k_prev, z_k);
-    t = omp_get_wtime() - t;
-    cout << "SpMv took: " << setprecision(5) << t << " seconds" << endl;
+    // t = omp_get_wtime();
+    // SpMv(N, IA, JA, M, r_k_prev, z_k);
+    // t = omp_get_wtime() - t;
+    // cout << "SpMv took: " << setprecision(5) << t << " seconds" << endl;
 
-    t = omp_get_wtime();
-    axpy(N, 1.23, r_k_prev, x_k_prev, p_k);
-    t = omp_get_wtime() - t;
-    cout << "axpy took: " << setprecision(5) << t << " seconds" << endl;
+    // t = omp_get_wtime();
+    // axpy(N, 1.23, r_k_prev, x_k_prev, p_k);
+    // t = omp_get_wtime() - t;
+    // cout << "axpy took: " << setprecision(5) << t << " seconds" << endl;
 
-    t = omp_get_wtime();
-    dot(N, r_k_prev, x_k_prev);
-    t = omp_get_wtime() - t;
-    cout << "dot took: " << setprecision(5) << t << " seconds" << endl;
+    // t = omp_get_wtime();
+    // dot(N, r_k_prev, x_k_prev);
+    // t = omp_get_wtime() - t;
+    // cout << "dot took: " << setprecision(5) << t << " seconds" << endl;
 
 
     do{
@@ -138,6 +138,9 @@ double solve(int N, int*& IA, int*& JA, double*& A, double*& b, double eps, int 
         ro_k_prev = ro_k;
     }
     while(ro_k > eps * eps && k < maxit);
+
+    // TEST
+    cout << "Number of iterations: " << k <<endl;
 
     x = new double[N];
     vector_cp(N, x, x_k);
