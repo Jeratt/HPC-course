@@ -1,5 +1,5 @@
 N_grid = [100, 300, 1000, 3000]
-T_grid = [1, 2, 4, 8, 16]
+T_grid = [1, 2, 4, 8, 16, 32]
 
 for n in N_grid:
     for t in T_grid:
