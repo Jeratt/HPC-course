@@ -72,7 +72,7 @@ double l2(int N, double*& x){
 
 double solve(int N, int*& IA, int*& JA, double*& A, double*& b, double eps, int maxit, double*& x, int &n){
     int k = 0;
-    double *x_k, *r_k, *M, *z_k, *p_k, *q_k, *x_k_prev, *p_k_prev, *r_k_prev, *tmp, ro_k, ro_k_prev, beta_k, alpha_k, t;
+    double *x_k, *r_k, *M, *z_k, *p_k, *q_k, *x_k_prev, *p_k_prev, *r_k_prev, *tmp, ro_k, ro_k_prev, beta_k, alpha_k, t, t_collect;
     x_k = new double[N];
     r_k = new double[N];
     M = new double[IA[N]];
@@ -89,22 +89,37 @@ double solve(int N, int*& IA, int*& JA, double*& A, double*& b, double eps, int 
     vector_cp(N, r_k_prev, b); // r_0
 
     // TEST
-    // cout << "doubled_E: " << IA[N] << endl;
+    cout << "doubled_E: " << IA[N] << endl;
+    
+    t_collect = 0;
+    for(int i = 0; i < 100; ++i){
+        t = omp_get_wtime();
+        SpMv(N, IA, JA, M, r_k_prev, z_k);
+        t = omp_get_wtime() - t;
+        t_collect += t;
+    }
+    t_collect /= 100.0;
+    cout << "SpMv took: " << setprecision(5) << t << " seconds" << endl;
 
-    // t = omp_get_wtime();
-    // SpMv(N, IA, JA, M, r_k_prev, z_k);
-    // t = omp_get_wtime() - t;
-    // cout << "SpMv took: " << setprecision(5) << t << " seconds" << endl;
+    t_collect = 0;
+    for(int i = 0; i < 100; ++i){
+        t = omp_get_wtime();
+        axpy(N, 1.23, r_k_prev, x_k_prev, p_k);
+        t = omp_get_wtime() - t;
+        t_collect += t;
+    }
+    t_collect /= 100.0;
+    cout << "axpy took: " << setprecision(5) << t << " seconds" << endl;
 
-    // t = omp_get_wtime();
-    // axpy(N, 1.23, r_k_prev, x_k_prev, p_k);
-    // t = omp_get_wtime() - t;
-    // cout << "axpy took: " << setprecision(5) << t << " seconds" << endl;
-
-    // t = omp_get_wtime();
-    // dot(N, r_k_prev, x_k_prev);
-    // t = omp_get_wtime() - t;
-    // cout << "dot took: " << setprecision(5) << t << " seconds" << endl;
+    t_collect = 0;
+    for(int i = 0; i < 100; ++i){
+        t = omp_get_wtime();
+        dot(N, r_k_prev, x_k_prev);
+        t = omp_get_wtime() - t;
+        t_collect += t;
+    }
+    t_collect /= 100.0;
+    cout << "dot took: " << setprecision(5) << t << " seconds" << endl;
 
 
     do{
