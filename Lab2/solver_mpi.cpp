@@ -46,7 +46,10 @@ int setHalo(int& N, int new_I, int*& Part, int*& L2G, int*& G2L){
     return G2L[new_I];
 }
 
-void countHalo(int& N_halo, int ind, int*& Part){
+void countHalo(int& N_halo, int base_ind, int ind, int*& Part){
+    if (Part[base_ind] != 1){
+        return;
+    }
     if (Part[ind] != 1){
         if (Part[ind] != 2){
             Part[ind] = 2;
@@ -141,45 +144,45 @@ void generate(int p_id, int Nx, int Ny, int K1, int K2, int Px, int Py, int& N, 
                     cnt_neigh[new_I] = 2;
                     if (i - 1 >= 0){ // верхний сосед
                         ++cnt_neigh[new_I];
-                        countHalo(N_halo, oldInd2New(Nx, Ny, K1, K2, i - 1, j), Part);
+                        countHalo(N_halo, new_I, oldInd2New(Nx, Ny, K1, K2, i - 1, j), Part);
                     }
                     if (j - 1 >= 0){ // левый сосед
                         ++cnt_neigh[new_I];
-                        countHalo(N_halo, oldInd2New(Nx, Ny, K1, K2, i, j - 1), Part);
+                        countHalo(N_halo, new_I, oldInd2New(Nx, Ny, K1, K2, i, j - 1), Part);
                     }
-                    doubled_E += cnt_neigh[new_I] * Part[new_I];
+                    doubled_E += cnt_neigh[new_I] * (Part[new_I] == 1 ? 1 : 0);
 
                     cnt_neigh[new_I + 1] = 2;
                     if (i + 1 < Ny){ // нижний сосед
                         ++cnt_neigh[new_I + 1]; 
-                        countHalo(N_halo, oldInd2New(Nx, Ny, K1, K2, i + 1, j), Part);
+                        countHalo(N_halo, new_I + 1, oldInd2New(Nx, Ny, K1, K2, i + 1, j), Part);
                     }
                     if (j + 1 < Nx){
                         ++cnt_neigh[new_I + 1]; // правый сосед
-                        countHalo(N_halo, oldInd2New(Nx, Ny, K1, K2, i, j + 1), Part);
+                        countHalo(N_halo, new_I + 1, oldInd2New(Nx, Ny, K1, K2, i, j + 1), Part);
                     }
-                    doubled_E += cnt_neigh[new_I + 1] * Part[new_I + 1];
+                    doubled_E += cnt_neigh[new_I + 1] * (Part[new_I + 1] == 1 ? 1 : 0);
                 }
                 else{
                     //v_types[new_I] = 0; // обычная клетка
                     cnt_neigh[new_I] = 1;
                     if (i - 1 >= 0){ // верхний сосед
                         ++cnt_neigh[new_I];
-                        countHalo(N_halo, oldInd2New(Nx, Ny, K1, K2, i - 1, j), Part);
+                        countHalo(N_halo, new_I, oldInd2New(Nx, Ny, K1, K2, i - 1, j), Part);
                     }
                     if (i + 1 < Ny){ // нижний сосед
                         ++cnt_neigh[new_I]; 
-                        countHalo(N_halo, oldInd2New(Nx, Ny, K1, K2, i + 1, j), Part);
+                        countHalo(N_halo, new_I, oldInd2New(Nx, Ny, K1, K2, i + 1, j), Part);
                     }
                     if (j - 1 >= 0){ // левый сосед
                         ++cnt_neigh[new_I];
-                        countHalo(N_halo, oldInd2New(Nx, Ny, K1, K2, i, j - 1), Part);
+                        countHalo(N_halo, new_I, oldInd2New(Nx, Ny, K1, K2, i, j - 1), Part);
                     }
                     if (j + 1 < Nx){
                         ++cnt_neigh[new_I]; // правый сосед
-                        countHalo(N_halo, oldInd2New(Nx, Ny, K1, K2, i, j + 1), Part);
+                        countHalo(N_halo, new_I, oldInd2New(Nx, Ny, K1, K2, i, j + 1), Part);
                     }
-                    doubled_E += cnt_neigh[new_I] * Part[new_I];
+                    doubled_E += cnt_neigh[new_I] * (Part[new_I] == 1 ? 1 : 0);
                 }
             }
         }
@@ -221,6 +224,9 @@ void generate(int p_id, int Nx, int Ny, int K1, int K2, int Px, int Py, int& N, 
         for(int j = 0; j < Nx; ++j){
             int new_I = oldInd2New(Nx, Ny, K1, K2, i, j);
             int old_I = i * Nx + j;
+            if (Part[new_I] != 1){
+                continue;
+            }
             int cur_JA = IA[G2L[new_I]];
             if (old_I % K >= K1){
                 if (i - 1 >= 0){ // верхний сосед
