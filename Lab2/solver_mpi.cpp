@@ -318,20 +318,20 @@ int main(int argc, char** argv){
     t = omp_get_wtime() - t;
     logFile << setprecision(5) << "Generate took: " << t << " seconds" << endl;
 
-    logFile.close();
-
+    logFile << "start free" << endl;
     delete [] IA;
-    cerr << "good IA" << endl;
+    logFile << "good IA" << endl;
     delete [] JA;
-    cerr << "good JA" << endl;
+    logFile << "good JA" << endl;
     delete [] Part;
-    cerr << "good PART" << endl;
+    logFile << "good PART" << endl;
     delete [] L2G; 
-    cerr << "good L2G" << endl;
+    logFile << "good L2G" << endl;
     delete [] G2L;
-    cerr << "good G2L" << endl;
+    logFile << "good G2L" << endl;
     // delete [] A;
     // delete [] b;
     // delete [] x;
+    logFile.close();
     return 0;
 }
