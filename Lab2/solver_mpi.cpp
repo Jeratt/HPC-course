@@ -46,12 +46,22 @@ int setHalo(int& N, int new_I, int*& Part, int*& L2G, int*& G2L){
     return G2L[new_I];
 }
 
+void countHalo(int& N_halo, int ind, int*& Part){
+    if (Part[ind] != 1){
+        if (Part[ind] != 2){
+            Part[ind] = 2;
+            ++N_halo;
+        }
+    }
+}
+
 void generate(int p_id, int Nx, int Ny, int K1, int K2, int Px, int Py, int& N, int& N0, int*& Part, int*& L2G, int*& G2L, int*& IA, int*& JA){
     int P = Px * Py;
     int K = K1 + K2;
     int trian_cnt = ((Ny * Nx) / K) * K2 + max(0, (Ny * Nx) % K - K1);
     int doubled_E = 0;
     int N_all = Ny * Nx + trian_cnt;
+    int N_halo = 0;
 
     //int* v_types = new int[N];
     int* cnt_neigh = new int[N_all];
@@ -131,18 +141,22 @@ void generate(int p_id, int Nx, int Ny, int K1, int K2, int Px, int Py, int& N, 
                     cnt_neigh[new_I] = 2;
                     if (i - 1 >= 0){ // верхний сосед
                         ++cnt_neigh[new_I];
+                        countHalo(N_halo, oldInd2New(Nx, Ny, K1, K2, i - 1, j), Part);
                     }
                     if (j - 1 >= 0){ // левый сосед
                         ++cnt_neigh[new_I];
+                        countHalo(N_halo, oldInd2New(Nx, Ny, K1, K2, i, j - 1), Part);
                     }
                     doubled_E += cnt_neigh[new_I] * Part[new_I];
 
                     cnt_neigh[new_I + 1] = 2;
                     if (i + 1 < Ny){ // нижний сосед
                         ++cnt_neigh[new_I + 1]; 
+                        countHalo(N_halo, oldInd2New(Nx, Ny, K1, K2, i + 1, j), Part);
                     }
                     if (j + 1 < Nx){
                         ++cnt_neigh[new_I + 1]; // правый сосед
+                        countHalo(N_halo, oldInd2New(Nx, Ny, K1, K2, i, j + 1), Part);
                     }
                     doubled_E += cnt_neigh[new_I + 1] * Part[new_I + 1];
                 }
@@ -151,15 +165,19 @@ void generate(int p_id, int Nx, int Ny, int K1, int K2, int Px, int Py, int& N, 
                     cnt_neigh[new_I] = 1;
                     if (i - 1 >= 0){ // верхний сосед
                         ++cnt_neigh[new_I];
+                        countHalo(N_halo, oldInd2New(Nx, Ny, K1, K2, i - 1, j), Part);
                     }
                     if (i + 1 < Ny){ // нижний сосед
                         ++cnt_neigh[new_I]; 
+                        countHalo(N_halo, oldInd2New(Nx, Ny, K1, K2, i + 1, j), Part);
                     }
                     if (j - 1 >= 0){ // левый сосед
                         ++cnt_neigh[new_I];
+                        countHalo(N_halo, oldInd2New(Nx, Ny, K1, K2, i, j - 1), Part);
                     }
                     if (j + 1 < Nx){
                         ++cnt_neigh[new_I]; // правый сосед
+                        countHalo(N_halo, oldInd2New(Nx, Ny, K1, K2, i, j + 1), Part);
                     }
                     doubled_E += cnt_neigh[new_I] * Part[new_I];
                 }
@@ -171,7 +189,7 @@ void generate(int p_id, int Nx, int Ny, int K1, int K2, int Px, int Py, int& N, 
     cout << N0 << endl;
 
     IA = new int[N0];
-    L2G = new int[N0];
+    L2G = new int[N0 + N_halo];
     G2L = new int[N_all];
     JA = new int[doubled_E];
 
@@ -264,6 +282,13 @@ void generate(int p_id, int Nx, int Ny, int K1, int K2, int Px, int Py, int& N, 
             }
         }
     }
+
+    if (N0 + N_halo != N){
+        cout << "N: " << N << endl;
+        cout << "N0: " << N0 << endl;
+        cout << "N_halo: " << N_halo << endl;
+    }
+
 }
 
 
