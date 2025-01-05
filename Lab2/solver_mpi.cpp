@@ -38,10 +38,11 @@ int oldInd2New(int Nx, int Ny, int K1, int K2, int i, int j){
 }
 
 int setHalo(int& N, int new_I, int*& Part, int*& L2G, int*& G2L){
-    if (Part[new_I] != 1){ // halo
+    if (Part[new_I] == 2){ // halo
         L2G[N] = new_I;
         G2L[new_I] = N;
         ++N;
+        Part[new_I] = 3;    
     }
     return G2L[new_I];
 }
