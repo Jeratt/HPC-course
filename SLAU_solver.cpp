@@ -102,13 +102,13 @@ double solve(int N, int*& IA, int*& JA, double*& A, double*& b, double eps, int 
     cout << "SpMv took: " << setprecision(5) << t << " seconds" << endl;
 
     t_collect = 0;
-    for(int i = 0; i < 1000; ++i){
+    for(int i = 0; i < 10000; ++i){
         t = omp_get_wtime();
         axpy(N, 1.23, r_k_prev, x_k_prev, p_k);
         t = omp_get_wtime() - t;
         t_collect += t;
     }
-    t_collect /= 100.0;
+    t_collect /= 10000.0;
     cout << "axpy took: " << setprecision(5) << t << " seconds" << endl;
 
     t_collect = 0;
@@ -118,7 +118,7 @@ double solve(int N, int*& IA, int*& JA, double*& A, double*& b, double eps, int 
         t = omp_get_wtime() - t;
         t_collect += t;
     }
-    t_collect /= 100.0;
+    t_collect /= 1000.0;
     cout << "dot took: " << setprecision(5) << t << " seconds" << endl;
 
 
