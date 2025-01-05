@@ -166,6 +166,9 @@ void generate(int p_id, int Nx, int Ny, int K1, int K2, int Px, int Py, int& N, 
         }
     }
 
+
+    cout << N0 << endl;
+
     IA = new int[N0];
     L2G = new int[N0];
     G2L = new int[N_all];
