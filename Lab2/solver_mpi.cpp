@@ -307,7 +307,9 @@ int main(int argc, char** argv){
     Ny = atoi(argv[2]);
     K1 = atoi(argv[3]);
     K2 = atoi(argv[4]);
-    T = atoi(argv[5]);
+    Px = atoi(argv[5]);
+    Py = atoi(argv[6]);
+    T = atoi(argv[7]);
     if (Nx == 0 || Ny == 0 || K1 == 0 || K2 == 0 || T == 0){
         cout <<"Введены некорректные параметры. Запустите программу без параметров, чтобы увидеть help";
         return 3;
