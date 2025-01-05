@@ -215,6 +215,7 @@ void generate(int p_id, int Nx, int Ny, int K1, int K2, int Px, int Py, int& N, 
     }
     IA[local_ind] = doubled_E;
 
+    cout << "TEST1" << endl;
 
     for(int i = 0; i < Ny; ++i){
         for(int j = 0; j < Nx; ++j){
