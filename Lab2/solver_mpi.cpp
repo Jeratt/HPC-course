@@ -62,34 +62,30 @@ void generate(int p_id, int Nx, int Ny, int K1, int K2, int Px, int Py, int& N, 
     Part = new int[N_all];
     int process_size = N_all / P;
 
-    #pragma omp parallel
-    {
-        #pragma omp for reduction(+:N0)
-        for(int i = 0; i < Ny; ++i){
-            for(int j = 0; j < Nx; ++j){
-                int old_I = i * Nx + j;
-                int new_I = oldInd2New(Nx, Ny, K1, K2, i, j);
-                int cur_p = old_I / process_size;
-                if (cur_p >= P){
-                    if (old_I % P == p_id){
-                        Part[new_I] = 1;
-                        ++N0;
-                    }
-                    else{
-                        Part[new_I] = 0;
-                    }
-                }
-                else if (cur_p == p_id){
+    for(int i = 0; i < Ny; ++i){
+        for(int j = 0; j < Nx; ++j){
+            int old_I = i * Nx + j;
+            int new_I = oldInd2New(Nx, Ny, K1, K2, i, j);
+            int cur_p = old_I / process_size;
+            if (cur_p >= P){
+                if (old_I % P == p_id){
                     Part[new_I] = 1;
                     ++N0;
                 }
                 else{
                     Part[new_I] = 0;
                 }
+            }
+            else if (cur_p == p_id){
+                Part[new_I] = 1;
+                ++N0;
+            }
+            else{
+                Part[new_I] = 0;
+            }
 
-                if (old_I % K >= K1){
-                    Part[new_I + 1] = Part[new_I];
-                }
+            if (old_I % K >= K1){
+                Part[new_I + 1] = Part[new_I];
             }
         }
     }
