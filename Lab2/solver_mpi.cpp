@@ -321,10 +321,15 @@ int main(int argc, char** argv){
     logFile.close();
 
     delete [] IA;
+    cerr << "good IA" << endl;
     delete [] JA;
+    cerr << "good JA" << endl;
     delete [] Part;
+    cerr << "good PART" << endl;
     delete [] L2G; 
+    cerr << "good L2G" << endl;
     delete [] G2L;
+    cerr << "good G2L" << endl;
     // delete [] A;
     // delete [] b;
     // delete [] x;

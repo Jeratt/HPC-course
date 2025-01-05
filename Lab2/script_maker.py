@@ -5,7 +5,7 @@ p_grid = [1, 2, 4, 8, 16, 32]
 for n in N_grid:
     for p in p_grid:
         with open(f"solver_job_{n}_{p}.lsf", 'w') as fin:
-            fin.write(f"#BSUB -n {p}")
+            fin.write(f"#BSUB -n {p}\n")
             fin.write("#BSUB -J \"OpenMP_job\"\n")
             fin.write("#BSUB -o \"OpenMP_job%J.out\"\n")
             fin.write("#BSUB -e \"OpenMP_job%J.err\"\n")
