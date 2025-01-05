@@ -86,6 +86,7 @@ void generate(int p_id, int Nx, int Ny, int K1, int K2, int Px, int Py, int& N, 
 
             if (old_I % K >= K1){
                 Part[new_I + 1] = Part[new_I];
+                ++N0;
             }
         }
     }
