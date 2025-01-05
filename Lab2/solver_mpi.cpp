@@ -321,6 +321,8 @@ int main(int argc, char** argv){
     t = omp_get_wtime() - t;
     logFile << setprecision(5) << "Generate took: " << t << " seconds" << endl;
 
+    logFile << "N0:" << N0 << endl;
+
     logFile << "start free" << endl;
     delete [] IA;
     logFile << "good IA" << endl;
