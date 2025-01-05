@@ -323,17 +323,17 @@ int main(int argc, char** argv){
 
     logFile << "N0:" << N0 << endl;
 
-    logFile << "start free" << endl;
-    delete [] IA;
-    logFile << "good IA" << endl;
-    delete [] JA;
-    logFile << "good JA" << endl;
-    delete [] Part;
-    logFile << "good PART" << endl;
-    delete [] L2G; 
-    logFile << "good L2G" << endl;
-    delete [] G2L;
-    logFile << "good G2L" << endl;
+    // logFile << "start free" << endl;
+    // delete [] IA;
+    // logFile << "good IA" << endl;
+    // delete [] JA;
+    // logFile << "good JA" << endl;
+    // delete [] Part;
+    // logFile << "good PART" << endl;
+    // delete [] L2G; 
+    // logFile << "good L2G" << endl;
+    // delete [] G2L;
+    // logFile << "good G2L" << endl;
     // delete [] A;
     // delete [] b;
     // delete [] x;
