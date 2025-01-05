@@ -188,7 +188,7 @@ void generate(int p_id, int Nx, int Ny, int K1, int K2, int Px, int Py, int& N, 
 
     cout << N0 << endl;
 
-    IA = new int[N0];
+    IA = new int[N0 + 1];
     L2G = new int[N0 + N_halo];
     G2L = new int[N_all];
     JA = new int[doubled_E];
