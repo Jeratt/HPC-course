@@ -225,8 +225,6 @@ void generate(int p_id, int Nx, int Ny, int K1, int K2, int Px, int Py, int& N, 
     }
     IA[local_ind] = doubled_E;
 
-    cout << "TEST1" << endl;
-
     for(int i = 0; i < Ny; ++i){
         for(int j = 0; j < Nx; ++j){
             int new_I = oldInd2New(Nx, Ny, K1, K2, i, j);
@@ -317,7 +315,7 @@ void fill(int N, int N0, int*& IA, int*& JA, int*& L2G, double*& A, double*& b){
     cout << "TEST 1" << endl;
 
     #pragma omp parallel for
-    for (int i = 0; i < N; ++i){
+    for (int i = 0; i < N0; ++i){
         for (int j = IA[i]; j < IA[i + 1]; ++j){
             if (i == JA[j]){
                 diag[i] = j;
@@ -331,7 +329,7 @@ void fill(int N, int N0, int*& IA, int*& JA, int*& L2G, double*& A, double*& b){
     cout << "TEST 2" << endl;
 
     #pragma omp parallel for
-    for (int i = 0; i < N; ++i){
+    for (int i = 0; i < N0; ++i){
         for (int j = IA[i]; j < IA[i + 1]; ++j){
             if (i == JA[j]){
                 continue;
