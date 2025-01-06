@@ -319,20 +319,17 @@ void fill(int N, int N0, int*& IA, int*& JA, int*& L2G, double*& A, double*& b){
     cout << "TEST 1" << endl;
     cout << "L2G: " << L2G[N - 1] << endl;
     cout << "JA: " << JA[IA[N0] - 1] << endl;
+    cout << "IA[N0]: " << IA[N0] << endl;
     
     #pragma omp parallel for
     for (int i = 0; i < N0; ++i){
         for (int j = IA[i]; j < IA[i + 1]; ++j){
             if (i == JA[j]){
                 diag[i] = j;
-                cout << "TEST X" << endl;
                 A[j] = 0;
-                cout << "TEST Y" << endl;
                 continue;
             }
-            cout << "TEST A" << endl;
             A[j] = cos(i * L2G[JA[j]] + i + L2G[JA[j]]);
-            cout << "TEST B" << endl;
         }
     }
 
