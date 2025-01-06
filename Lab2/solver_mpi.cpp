@@ -223,6 +223,7 @@ void generate(int p_id, int Nx, int Ny, int K1, int K2, int Px, int Py, int& N, 
             ++local_ind;
         }
     }
+    cout << "local_ind: " << local_ind << endl;
     IA[local_ind] = doubled_E;
 
     cout << "TEST SET 1" << endl;
