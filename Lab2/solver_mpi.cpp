@@ -58,7 +58,7 @@ void countHalo(int p_id, int& N_halo, int base_ind, int ind, int*& Part){
     }
     if (Part[ind] != p_id){
         if (Part[ind] >= 0){
-            Part[ind] = -Part[ind];
+            Part[ind] = -Part[ind] - 1;
             ++N_halo;
         }
     }
