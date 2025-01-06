@@ -157,7 +157,7 @@ void generate(int p_id, int Nx, int Ny, int K1, int K2, int Px, int Py, int& N, 
                         ++cnt_neigh[new_I];
                         countHalo(p_id, N_halo, new_I, oldInd2New(Nx, Ny, K1, K2, i, j - 1), Part);
                     }
-                    doubled_E += cnt_neigh[new_I] * (Part[new_I] == 1 ? 1 : 0);
+                    doubled_E += cnt_neigh[new_I] * (Part[new_I] == p_id ? 1 : 0);
 
                     cnt_neigh[new_I + 1] = 2;
                     if (i + 1 < Ny){ // нижний сосед
@@ -168,7 +168,7 @@ void generate(int p_id, int Nx, int Ny, int K1, int K2, int Px, int Py, int& N, 
                         ++cnt_neigh[new_I + 1]; // правый сосед
                         countHalo(p_id, N_halo, new_I + 1, oldInd2New(Nx, Ny, K1, K2, i, j + 1), Part);
                     }
-                    doubled_E += cnt_neigh[new_I + 1] * (Part[new_I + 1] == 1 ? 1 : 0);
+                    doubled_E += cnt_neigh[new_I + 1] * (Part[new_I + 1] == p_id ? 1 : 0);
                 }
                 else{
                     //v_types[new_I] = 0; // обычная клетка
@@ -189,7 +189,7 @@ void generate(int p_id, int Nx, int Ny, int K1, int K2, int Px, int Py, int& N, 
                         ++cnt_neigh[new_I]; // правый сосед
                         countHalo(p_id, N_halo, new_I, oldInd2New(Nx, Ny, K1, K2, i, j + 1), Part);
                     }
-                    doubled_E += cnt_neigh[new_I] * (Part[new_I] == 1 ? 1 : 0);
+                    doubled_E += cnt_neigh[new_I] * (Part[new_I] == p_id ? 1 : 0);
                 }
             }
         }
