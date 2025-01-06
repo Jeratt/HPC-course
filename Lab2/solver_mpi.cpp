@@ -225,6 +225,8 @@ void generate(int p_id, int Nx, int Ny, int K1, int K2, int Px, int Py, int& N, 
     }
     IA[local_ind] = doubled_E;
 
+    cout << "TEST SET 1" << endl;
+
     for(int i = 0; i < Ny; ++i){
         for(int j = 0; j < Nx; ++j){
             int new_I = oldInd2New(Nx, Ny, K1, K2, i, j);
@@ -294,6 +296,8 @@ void generate(int p_id, int Nx, int Ny, int K1, int K2, int Px, int Py, int& N, 
             }
         }
     }
+
+    cout << "TEST SET 2" << endl;
 
     N = N0 + N_halo;
 
