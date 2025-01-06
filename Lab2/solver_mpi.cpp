@@ -43,11 +43,13 @@ i = halo of (-(i+1)-th process, i < 0)
 */
 
 int setHalo(int& N, int new_I, int*& Part, bool*& checkedHalo, int*& L2G, int*& G2L){
+    cout << "TEST HALO 1" << endl;
     if (Part[new_I] < 0 && checkedHalo[new_I] == false){ // halo
         L2G[N] = new_I;
         G2L[new_I] = N;
         ++N;
         checkedHalo[new_I] = true;    
+        cout << "TEST HALO 2" << endl;
     }
     return G2L[new_I];
 }
