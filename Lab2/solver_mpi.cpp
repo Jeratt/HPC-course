@@ -49,8 +49,8 @@ int setHalo(int& N, int new_I, int*& Part, bool*& checkedHalo, int*& L2G, int*& 
         G2L[new_I] = N;
         ++N;
         checkedHalo[new_I] = true;    
-        cout << "TEST HALO 2" << endl;
     }
+    cout << "TEST HALO 2" << endl;
     return G2L[new_I];
 }
 
