@@ -43,14 +43,12 @@ i = halo of (-(i+1)-th process, i < 0)
 */
 
 int setHalo(int& N, int new_I, int*& Part, bool*& checkedHalo, int*& L2G, int*& G2L){
-    cout << "TEST HALO 1" << endl;
     if (Part[new_I] < 0 && checkedHalo[new_I] == false){ // halo
         L2G[N] = new_I;
         G2L[new_I] = N;
         ++N;
         checkedHalo[new_I] = true;    
     }
-    cout << "TEST HALO 2" << endl;
     return G2L[new_I];
 }
 
@@ -316,6 +314,8 @@ void fill(int N, int N0, int*& IA, int*& JA, int*& L2G, double*& A, double*& b){
     A = new double[IA[N0]];
     b = new double[N];
 
+    cout << "TEST 1" << endl;
+
     #pragma omp parallel for
     for (int i = 0; i < N; ++i){
         for (int j = IA[i]; j < IA[i + 1]; ++j){
@@ -328,6 +328,8 @@ void fill(int N, int N0, int*& IA, int*& JA, int*& L2G, double*& A, double*& b){
         }
     }
 
+    cout << "TEST 2" << endl;
+
     #pragma omp parallel for
     for (int i = 0; i < N; ++i){
         for (int j = IA[i]; j < IA[i + 1]; ++j){
@@ -337,6 +339,8 @@ void fill(int N, int N0, int*& IA, int*& JA, int*& L2G, double*& A, double*& b){
             A[diag[i]] += abs(A[j]);
         }
     }
+
+    cout << "TEST 3" << endl;
 
     #pragma omp parallel for
     for (int i = 0; i < N; ++i){
