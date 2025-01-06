@@ -316,6 +316,8 @@ void fill(int N, int N0, int*& IA, int*& JA, int*& L2G, double*& A, double*& b){
     A = new double[IA[N0]];
     b = new double[N];
 
+    cout << "TEST 1" << endl;
+    
     #pragma omp parallel for
     for (int i = 0; i < N0; ++i){
         for (int j = IA[i]; j < IA[i + 1]; ++j){
@@ -328,6 +330,8 @@ void fill(int N, int N0, int*& IA, int*& JA, int*& L2G, double*& A, double*& b){
         }
     }
 
+    cout << "TEST 2" << endl;
+
     #pragma omp parallel for
     for (int i = 0; i < N0; ++i){
         for (int j = IA[i]; j < IA[i + 1]; ++j){
@@ -338,19 +342,21 @@ void fill(int N, int N0, int*& IA, int*& JA, int*& L2G, double*& A, double*& b){
         }
     }
 
+    cout << "TEST 3" << endl;
+
     #pragma omp parallel for
     for (int i = 0; i < N0; ++i){
         A[diag[i]] *= DIAG_COEFF;
     }
     
-    cout << "TEST 1" << endl;
+    cout << "TEST 4" << endl;
 
     #pragma omp parallel for
     for (int i = 0; i < N; ++i){
         b[i] = sin(L2G[i]);
     }
 
-    cout << "TEST 2" << endl;
+    cout << "TEST 5" << endl;
 
     delete [] diag;
 }
