@@ -13,6 +13,10 @@ for n in N_grid:
             if p == 1:
                 fin.write(f"mpiexec -np 1 ../a.out {n} {n} 3 3 1 1 {1}\n")
             elif p == 2:
-                fin.write(f"mpiexec ../a.out {n} {n} 3 3 1 2 {1}\n")
-            else:
-                fin.write(f"mpiexec ../a.out {n} {n} 3 3 {int(p ** 0.5)} {int(p ** 0.5)} {1}\n")
+                fin.write(f"mpiexec ../a.out {n} {n} 3 3 1 2 {1}\n");
+            elif p == 4:
+                fin.write(f"mpiexec ../a.out {n} {n} 3 3 2 2 {1}\n");
+            elif p == 8:
+                fin.write(f"mpiexec ../a.out {n} {n} 3 3 4 2 {1}\n");
+            elif p == 16:
+                fin.write(f"mpiexec ../a.out {n} {n} 3 3 4 4 {1}\n");
