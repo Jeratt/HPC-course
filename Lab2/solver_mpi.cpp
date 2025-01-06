@@ -302,6 +302,10 @@ void generate(int p_id, int Nx, int Ny, int K1, int K2, int Px, int Py, int& N, 
 
     cout << "TEST SET 2" << endl;
 
+    cout << "N: " << N << endl;
+    cout << "N0: " << N0 << endl;
+    cout << "N_halo: " << N_halo << endl;
+
     N = N0 + N_halo;
 
     // if (N0 + N_halo != N){
