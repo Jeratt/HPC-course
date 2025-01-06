@@ -424,6 +424,11 @@ int main(int argc, char** argv){
         cout <<"Введены некорректные параметры. Запустите программу без параметров, чтобы увидеть help";
         return 3;
     }
+    if (Px * Py != NumProc){
+        cout << "Invalid process amount!" << endl;
+        MPI_Abort(MPI_COMM_WORLD, -1);
+        return 0;
+    }
 
     omp_set_num_threads(T);
 
