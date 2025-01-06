@@ -195,7 +195,7 @@ void generate(int p_id, int Nx, int Ny, int K1, int K2, int Px, int Py, int& N, 
         }
     }
 
-
+    cout << "p_id: " << p_id << endl;
     cout << N0 << endl;
 
     IA = new int[N0 + 1];
