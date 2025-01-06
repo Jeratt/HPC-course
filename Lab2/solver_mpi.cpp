@@ -92,13 +92,10 @@ void generate(int p_id, int Nx, int Ny, int K1, int K2, int Px, int Py, int& N, 
             int new_I = oldInd2New(Nx, Ny, K1, K2, i, j);
             int cur_p = old_I / process_size;
             if (cur_p >= P){
-                if (old_I % P == p_id){
-                    Part[new_I] = p_id;
-                    ++N0;
-                }
+                cur_p = old_I % P;
             }
-            else if (cur_p == p_id){
-                Part[new_I] = p_id;
+            Part[new_I] = cur_p;
+            if (cur_p == p_id){
                 ++N0;
             }
 
