@@ -302,8 +302,6 @@ void generate(int p_id, int Nx, int Ny, int K1, int K2, int Px, int Py, int& N, 
     }
     cout << "HALO TEST: " << cnt;
 
-    cout << "TEST SET 2" << endl;
-
     cout << "N: " << N << endl;
     cout << "N0: " << N0 << endl;
     cout << "N_halo: " << N_halo << endl;
@@ -342,7 +340,7 @@ void fill(int N, int N0, int*& IA, int*& JA, int*& L2G, double*& A, double*& b){
         }
     }
 
-    cout << "TEST 2" << endl;
+    // cout << "TEST 2" << endl;
 
     #pragma omp parallel for
     for (int i = 0; i < N0; ++i){
@@ -354,21 +352,21 @@ void fill(int N, int N0, int*& IA, int*& JA, int*& L2G, double*& A, double*& b){
         }
     }
 
-    cout << "TEST 3" << endl;
+    // cout << "TEST 3" << endl;
 
     #pragma omp parallel for
     for (int i = 0; i < N0; ++i){
         A[diag[i]] *= DIAG_COEFF;
     }
     
-    cout << "TEST 4" << endl;
+    // cout << "TEST 4" << endl;
 
     #pragma omp parallel for
     for (int i = 0; i < N; ++i){
         b[i] = sin(L2G[i]);
     }
 
-    cout << "TEST 5" << endl;
+    // cout << "TEST 5" << endl;
 
     delete [] diag;
 }
