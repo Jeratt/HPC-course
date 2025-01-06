@@ -317,6 +317,8 @@ void fill(int N, int N0, int*& IA, int*& JA, int*& L2G, double*& A, double*& b){
     b = new double[N];
 
     cout << "TEST 1" << endl;
+    cout << "L2G: " << L2G[N - 1] << endl;
+    cout << "JA: " << JA[IA[N0] - 1] << endl;
     
     #pragma omp parallel for
     for (int i = 0; i < N0; ++i){
