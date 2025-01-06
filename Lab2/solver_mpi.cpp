@@ -296,6 +296,15 @@ void generate(int p_id, int Nx, int Ny, int K1, int K2, int Px, int Py, int& N, 
         }
     }
 
+    // TEST
+    int cnt = 0;
+    for(int i = 0; i < N_all; ++i){
+        if (Part[i] < 0 && checkedHalo[i] == true){
+            ++cnt;
+        }
+    }
+    cout << "HALO TEST: " << cnt;
+
     cout << "TEST SET 2" << endl;
 
     cout << "N: " << N << endl;
