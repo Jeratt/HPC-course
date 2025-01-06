@@ -188,7 +188,7 @@ void generate(int p_id, int Nx, int Ny, int K1, int K2, int Px, int Py, int& N, 
         }
     }
 
-    cout << "p_id: " << p_id << endl;
+    cout << endl << endl << "p_id: " << p_id << endl;
     cout << "N_halo: " << N_halo << endl;
     cout << N0 << endl;
 
@@ -389,6 +389,8 @@ int main(int argc, char** argv){
     {
         crash("MPI_Comm_size failed (code %d)\n", mpi_res);
     }
+
+    cout << "NUM PROC: " << NumProc << endl;
 
     int MyID;
     mpi_res = MPI_Comm_rank(MPI_COMM_WORLD,&MyID); // узнаем номер данного процесса
