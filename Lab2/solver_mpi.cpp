@@ -84,7 +84,7 @@ void generate(int p_id, int Nx, int Ny, int K1, int K2, int Px, int Py, int& N, 
         checkedHalo[i] = false;
     }
 
-    int process_size = N_all / P;
+    int process_size = Ny * Nx / P;
 
     for(int i = 0; i < Ny; ++i){
         for(int j = 0; j < Nx; ++j){
