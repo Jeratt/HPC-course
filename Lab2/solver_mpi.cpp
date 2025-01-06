@@ -308,11 +308,9 @@ void generate(int p_id, int Nx, int Ny, int K1, int K2, int Px, int Py, int& N, 
 void fill(int N, int N0, int*& IA, int*& JA, int*& L2G, double*& A, double*& b){
     double DIAG_COEFF = 1.234;
 
-    int* diag = new int[N];
+    int* diag = new int[N0];
     A = new double[IA[N0]];
     b = new double[N];
-
-    cout << "TEST 1" << endl;
 
     #pragma omp parallel for
     for (int i = 0; i < N0; ++i){
@@ -326,8 +324,6 @@ void fill(int N, int N0, int*& IA, int*& JA, int*& L2G, double*& A, double*& b){
         }
     }
 
-    cout << "TEST 2" << endl;
-
     #pragma omp parallel for
     for (int i = 0; i < N0; ++i){
         for (int j = IA[i]; j < IA[i + 1]; ++j){
@@ -338,11 +334,13 @@ void fill(int N, int N0, int*& IA, int*& JA, int*& L2G, double*& A, double*& b){
         }
     }
 
-    cout << "TEST 3" << endl;
+    #pragma omp parallel for
+    for (int i = 0; i < N0; ++i){
+        A[diag[i]] *= DIAG_COEFF;
+    }
 
     #pragma omp parallel for
     for (int i = 0; i < N; ++i){
-        A[diag[i]] *= DIAG_COEFF;
         b[i] = sin(L2G[i]);
     }
 
