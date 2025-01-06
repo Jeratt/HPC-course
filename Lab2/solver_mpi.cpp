@@ -1,5 +1,5 @@
 #include <algorithm>
-#include <iostream> // TEST
+#include <iostream>
 #include <fstream>
 #include <cmath>
 #include <omp.h>
@@ -37,23 +37,28 @@ int oldInd2New(int Nx, int Ny, int K1, int K2, int i, int j){
     return new_I;
 }
 
-int setHalo(int& N, int new_I, int*& Part, int*& L2G, int*& G2L){
-    if (Part[new_I] == 2){ // halo
+/*
+i = element of i-th process, i >= 0
+i = halo of (-(i+1)-th process, i < 0)
+*/
+
+int setHalo(int& N, int new_I, int*& Part, bool*& checkedHalo, int*& L2G, int*& G2L){
+    if (Part[new_I] < 0 && checkedHalo[new_I] == false){ // halo
         L2G[N] = new_I;
         G2L[new_I] = N;
         ++N;
-        Part[new_I] = 3;    
+        checkedHalo[new_I] = true;    
     }
     return G2L[new_I];
 }
 
-void countHalo(int& N_halo, int base_ind, int ind, int*& Part){
-    if (Part[base_ind] != 1){
+void countHalo(int p_id, int& N_halo, int base_ind, int ind, int*& Part){
+    if (Part[base_ind] != p_id){
         return;
     }
-    if (Part[ind] != 1){
-        if (Part[ind] != 2){
-            Part[ind] = 2;
+    if (Part[ind] != p_id){
+        if (Part[ind] >= 0){
+            Part[ind] = -Part[ind];
             ++N_halo;
         }
     }
@@ -74,6 +79,11 @@ void generate(int p_id, int Nx, int Ny, int K1, int K2, int Px, int Py, int& N, 
     N = 0;
     N0 = 0;
     Part = new int[N_all];
+    bool* checkedHalo = new bool[N_all];
+    for(int i = 0; i < N_all; ++i){
+        checkedHalo[i] = false;
+    }
+
     int process_size = N_all / P;
 
     for(int i = 0; i < Ny; ++i){
@@ -83,24 +93,18 @@ void generate(int p_id, int Nx, int Ny, int K1, int K2, int Px, int Py, int& N, 
             int cur_p = old_I / process_size;
             if (cur_p >= P){
                 if (old_I % P == p_id){
-                    Part[new_I] = 1;
+                    Part[new_I] = p_id;
                     ++N0;
-                }
-                else{
-                    Part[new_I] = 0;
                 }
             }
             else if (cur_p == p_id){
-                Part[new_I] = 1;
+                Part[new_I] = p_id;
                 ++N0;
-            }
-            else{
-                Part[new_I] = 0;
             }
 
             if (old_I % K >= K1){
                 Part[new_I + 1] = Part[new_I];
-                if (Part[new_I] == 1){
+                if (Part[new_I] == p_id){
                     ++N0;
                 }
             }
@@ -147,22 +151,22 @@ void generate(int p_id, int Nx, int Ny, int K1, int K2, int Px, int Py, int& N, 
                     cnt_neigh[new_I] = 2;
                     if (i - 1 >= 0){ // верхний сосед
                         ++cnt_neigh[new_I];
-                        countHalo(N_halo, new_I, oldInd2New(Nx, Ny, K1, K2, i - 1, j), Part);
+                        countHalo(p_id, N_halo, new_I, oldInd2New(Nx, Ny, K1, K2, i - 1, j), Part);
                     }
                     if (j - 1 >= 0){ // левый сосед
                         ++cnt_neigh[new_I];
-                        countHalo(N_halo, new_I, oldInd2New(Nx, Ny, K1, K2, i, j - 1), Part);
+                        countHalo(p_id, N_halo, new_I, oldInd2New(Nx, Ny, K1, K2, i, j - 1), Part);
                     }
                     doubled_E += cnt_neigh[new_I] * (Part[new_I] == 1 ? 1 : 0);
 
                     cnt_neigh[new_I + 1] = 2;
                     if (i + 1 < Ny){ // нижний сосед
                         ++cnt_neigh[new_I + 1]; 
-                        countHalo(N_halo, new_I + 1, oldInd2New(Nx, Ny, K1, K2, i + 1, j), Part);
+                        countHalo(p_id, N_halo, new_I + 1, oldInd2New(Nx, Ny, K1, K2, i + 1, j), Part);
                     }
                     if (j + 1 < Nx){
                         ++cnt_neigh[new_I + 1]; // правый сосед
-                        countHalo(N_halo, new_I + 1, oldInd2New(Nx, Ny, K1, K2, i, j + 1), Part);
+                        countHalo(p_id, N_halo, new_I + 1, oldInd2New(Nx, Ny, K1, K2, i, j + 1), Part);
                     }
                     doubled_E += cnt_neigh[new_I + 1] * (Part[new_I + 1] == 1 ? 1 : 0);
                 }
@@ -171,19 +175,19 @@ void generate(int p_id, int Nx, int Ny, int K1, int K2, int Px, int Py, int& N, 
                     cnt_neigh[new_I] = 1;
                     if (i - 1 >= 0){ // верхний сосед
                         ++cnt_neigh[new_I];
-                        countHalo(N_halo, new_I, oldInd2New(Nx, Ny, K1, K2, i - 1, j), Part);
+                        countHalo(p_id, N_halo, new_I, oldInd2New(Nx, Ny, K1, K2, i - 1, j), Part);
                     }
                     if (i + 1 < Ny){ // нижний сосед
                         ++cnt_neigh[new_I]; 
-                        countHalo(N_halo, new_I, oldInd2New(Nx, Ny, K1, K2, i + 1, j), Part);
+                        countHalo(p_id, N_halo, new_I, oldInd2New(Nx, Ny, K1, K2, i + 1, j), Part);
                     }
                     if (j - 1 >= 0){ // левый сосед
                         ++cnt_neigh[new_I];
-                        countHalo(N_halo, new_I, oldInd2New(Nx, Ny, K1, K2, i, j - 1), Part);
+                        countHalo(p_id, N_halo, new_I, oldInd2New(Nx, Ny, K1, K2, i, j - 1), Part);
                     }
                     if (j + 1 < Nx){
                         ++cnt_neigh[new_I]; // правый сосед
-                        countHalo(N_halo, new_I, oldInd2New(Nx, Ny, K1, K2, i, j + 1), Part);
+                        countHalo(p_id, N_halo, new_I, oldInd2New(Nx, Ny, K1, K2, i, j + 1), Part);
                     }
                     doubled_E += cnt_neigh[new_I] * (Part[new_I] == 1 ? 1 : 0);
                 }
@@ -206,7 +210,7 @@ void generate(int p_id, int Nx, int Ny, int K1, int K2, int Px, int Py, int& N, 
 
     int prev_global, local_ind = 0;
     for(int i = 0; i < N_all; ++i){
-        if (Part[i] == 1){
+        if (Part[i] == p_id){
             if (local_ind == 0){
                 IA[0] = 0;
             }
@@ -227,66 +231,66 @@ void generate(int p_id, int Nx, int Ny, int K1, int K2, int Px, int Py, int& N, 
         for(int j = 0; j < Nx; ++j){
             int new_I = oldInd2New(Nx, Ny, K1, K2, i, j);
             int old_I = i * Nx + j;
-            if (Part[new_I] != 1){
+            if (Part[new_I] != p_id){
                 continue;
             }
             int cur_JA = IA[G2L[new_I]];
             if (old_I % K >= K1){
                 if (i - 1 >= 0){ // верхний сосед
                     if (((i - 1) * Nx + j) % K >= K1){ // если сверху треугольник
-                        JA[cur_JA] = setHalo(N, oldInd2New(Nx, Ny, K1, K2, i - 1, j) + 1, Part, L2G, G2L);
+                        JA[cur_JA] = setHalo(N, oldInd2New(Nx, Ny, K1, K2, i - 1, j) + 1, Part, checkedHalo, L2G, G2L);
                         //JA[cur_JA] = G2L[oldInd2New(Nx, Ny, K1, K2, i - 1, j) + 1];
                         ++cur_JA;
                     }else{
                         //JA[cur_JA] = G2L[oldInd2New(Nx, Ny, K1, K2, i - 1, j)];
-                        JA[cur_JA] = setHalo(N, oldInd2New(Nx, Ny, K1, K2, i - 1, j), Part, L2G, G2L);
+                        JA[cur_JA] = setHalo(N, oldInd2New(Nx, Ny, K1, K2, i - 1, j), Part, checkedHalo, L2G, G2L);
                         ++cur_JA;
                     }
                 }
                 if (j - 1 >= 0){ // левый сосед
-                    JA[cur_JA] = setHalo(N, new_I - 1, Part, L2G, G2L);
+                    JA[cur_JA] = setHalo(N, new_I - 1, Part, checkedHalo, L2G, G2L);
                     ++cur_JA;
                 }
-                JA[cur_JA] = setHalo(N, new_I, Part, L2G, G2L); // главная диагональ
+                JA[cur_JA] = setHalo(N, new_I, Part, checkedHalo, L2G, G2L); // главная диагональ
                 ++cur_JA;
-                JA[cur_JA] = setHalo(N, new_I + 1, Part, L2G, G2L); // нижний треугольник = правый сосед
+                JA[cur_JA] = setHalo(N, new_I + 1, Part, checkedHalo, L2G, G2L); // нижний треугольник = правый сосед
                 ++cur_JA;
                 
-                JA[cur_JA] = setHalo(N, new_I, Part, L2G, G2L); // верхний треугольник = левый сосед
+                JA[cur_JA] = setHalo(N, new_I, Part, checkedHalo, L2G, G2L); // верхний треугольник = левый сосед
                 ++cur_JA;
-                JA[cur_JA] = setHalo(N, new_I + 1, Part, L2G, G2L); // главная диагональ
+                JA[cur_JA] = setHalo(N, new_I + 1, Part, checkedHalo, L2G, G2L); // главная диагональ
                 ++cur_JA;
                 if (j + 1 < Nx){ // правый сосед
-                    JA[cur_JA] = setHalo(N, new_I + 2, Part, L2G, G2L);
+                    JA[cur_JA] = setHalo(N, new_I + 2, Part, checkedHalo, L2G, G2L);
                     ++cur_JA; 
                 }
                 if (i + 1 < Ny){ // нижний сосед
-                    JA[cur_JA] = setHalo(N, oldInd2New(Nx, Ny, K1, K2, i + 1, j), Part, L2G, G2L);
+                    JA[cur_JA] = setHalo(N, oldInd2New(Nx, Ny, K1, K2, i + 1, j), Part, checkedHalo, L2G, G2L);
                     ++cur_JA;
                 }            
             }
             else{
                 if (i - 1 >= 0){ // верхний сосед
                     if (((i - 1) * Nx + j) % K >= K1){ // если сверху треугольник
-                        JA[cur_JA] = setHalo(N, oldInd2New(Nx, Ny, K1, K2, i - 1, j) + 1, Part, L2G, G2L);
+                        JA[cur_JA] = setHalo(N, oldInd2New(Nx, Ny, K1, K2, i - 1, j) + 1, Part, checkedHalo, L2G, G2L);
                         ++cur_JA;
                     }else{
-                        JA[cur_JA] = setHalo(N, oldInd2New(Nx, Ny, K1, K2, i - 1, j), Part, L2G, G2L);
+                        JA[cur_JA] = setHalo(N, oldInd2New(Nx, Ny, K1, K2, i - 1, j), Part, checkedHalo, L2G, G2L);
                         ++cur_JA;
                     }
                 }
                 if (j - 1 >= 0){ // левый сосед
-                    JA[cur_JA] = setHalo(N, new_I - 1, Part, L2G, G2L);
+                    JA[cur_JA] = setHalo(N, new_I - 1, Part, checkedHalo, L2G, G2L);
                     ++cur_JA;
                 }
-                JA[cur_JA] = setHalo(N, new_I, Part, L2G, G2L); // главная диагональ
+                JA[cur_JA] = setHalo(N, new_I, Part, checkedHalo, L2G, G2L); // главная диагональ
                 ++cur_JA;
                 if (j + 1 < Nx){ // правый сосед
-                    JA[cur_JA] = setHalo(N, new_I + 1, Part, L2G, G2L);
+                    JA[cur_JA] = setHalo(N, new_I + 1, Part, checkedHalo, L2G, G2L);
                     ++cur_JA; 
                 }
                 if (i + 1 < Ny){ // нижний сосед
-                    JA[cur_JA] = setHalo(N, oldInd2New(Nx, Ny, K1, K2, i + 1, j), Part, L2G, G2L);
+                    JA[cur_JA] = setHalo(N, oldInd2New(Nx, Ny, K1, K2, i + 1, j), Part, checkedHalo, L2G, G2L);
                     ++cur_JA;
                 }
             }
@@ -303,6 +307,47 @@ void generate(int p_id, int Nx, int Ny, int K1, int K2, int Px, int Py, int& N, 
 
 }
 
+void fill(int N, int N0, int*& IA, int*& JA, int*& L2G, double*& A, double*& b){
+    double DIAG_COEFF = 1.234;
+
+    int* diag = new int[N];
+    A = new double[IA[N0]];
+    b = new double[N];
+
+    #pragma omp parallel for
+    for (int i = 0; i < N; ++i){
+        for (int j = IA[i]; j < IA[i + 1]; ++j){
+            if (i == JA[j]){
+                diag[i] = j;
+                A[j] = 0;
+                continue;
+            }
+            A[j] = cos(i * L2G[JA[j]] + i + L2G[JA[j]]);
+        }
+    }
+
+    #pragma omp parallel for
+    for (int i = 0; i < N; ++i){
+        for (int j = IA[i]; j < IA[i + 1]; ++j){
+            if (i == JA[j]){
+                continue;
+            }
+            A[diag[i]] += abs(A[j]);
+        }
+    }
+
+    #pragma omp parallel for
+    for (int i = 0; i < N; ++i){
+        A[diag[i]] *= DIAG_COEFF;
+        b[i] = sin(L2G[i]);
+    }
+
+    delete [] diag;
+}
+
+void com(int N, int N0, int*& IA, int*& JA, int*& Part, int*& L2G){
+
+}
 
 int main(int argc, char** argv){
     int mpi_res;
@@ -360,6 +405,11 @@ int main(int argc, char** argv){
     logFile << setprecision(5) << "Generate took: " << t << " seconds" << endl;
 
     logFile << "N0:" << N0 << endl;
+
+    t = omp_get_wtime();
+    fill(N, N0, IA, JA, L2G, A, b);
+    t = omp_get_wtime() - t;
+    logFile << setprecision(5) << "Fill took: " << t << " seconds" << endl;
 
     // logFile << "start free" << endl;
     // delete [] IA;
