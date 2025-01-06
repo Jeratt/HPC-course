@@ -338,11 +338,15 @@ void fill(int N, int N0, int*& IA, int*& JA, int*& L2G, double*& A, double*& b){
     for (int i = 0; i < N0; ++i){
         A[diag[i]] *= DIAG_COEFF;
     }
+    
+    cout << "TEST 1" << endl;
 
     #pragma omp parallel for
     for (int i = 0; i < N; ++i){
         b[i] = sin(L2G[i]);
     }
+
+    cout << "TEST 2" << endl;
 
     delete [] diag;
 }
