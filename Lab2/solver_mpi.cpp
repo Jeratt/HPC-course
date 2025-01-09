@@ -65,6 +65,10 @@ public:
         return Neighbours.data();
     }
 
+    const int GetNumOfNeighbours() const {
+        return Neighbours.size();
+    }
+
     // Getter for the MPI communicator
     MPI_Comm GetMyComm() const {
         return MyComm;
@@ -156,6 +160,64 @@ public:
 
     }
 };
+
+template <typename VarType> void Update(
+int nBlocks, // число блочных векторов, которые надо обновить
+VarType **VV, // массив указателей на эти блочные вектора (размера nBlocks)
+const int *VarNums, // массив с числом переменных в блоках каждого блочного вектора
+const tCommScheme &CS /*структура, описывающая схему обменов*/){
+    const int B = CS.GetNumOfNeighbours(); // число соседей
+    if(B==0) return; // нет соседей - нет проблем
+    ASSERT(nBlocks>0, "wrong nBlocks!");
+    int VAR_NUM = 0; // общее число переменных во всех блоках
+    for(int iv=0; iv<nBlocks; ++iv){ // считаем сколько переменных во всех блоках
+    ASSERT(VarNums[iv]>0, "wrong block size!");
+    ASSERT(VV[iv], "NULL pointer!");
+    VAR_NUM += VarNums[iv];
+    }
+
+    int *Send = CS.GetSendList(); // список ячеек на отправку по всем соседям
+    int *Recv = CS.GetRecvList(); // список ячеек на прием по всем соседям
+    int *SendOffset = CS.GetSendOffset(); // смещения списков по каждому соседу на отправку
+    int *RecvOffset = CS.GetRecvOffset(); // смещения списков по каждому соседу на прием
+    int *Neighbours = CS.GetListOfNeigbours(); // номера процессов соседей
+    MPI_Comm MCW = CS.GetMyComm(); // коммуникатор для данной группы (MPI_COMM_WORLD)
+
+    int sendCount=SendOffset[B]; // размер общего списка на отправку по всем соседям
+    int recvCount=RecvOffset[B]; // размер общего списка на прием по всем соседям
+    int sendSize = sendCount*VAR_NUM; // размеры общего буфера на отправку
+    int recvSize = recvCount*VAR_NUM; // размеры общего буфера на прием
+    static vector<VarType> SENDBUF, RECVBUF; // буферы на отправку и прием по всем соседям
+    static vector<MPI_Request> SREQ, RREQ; // реквесты для неблокирующих обменов
+    static vector<MPI_Status> SSTS, RSTS; // статусы для них же
+    // ресайзим, если надо
+    if(B>(int)SREQ.size()){SREQ.resize(B); RREQ.resize(B); SSTS.resize(B); RSTS.resize(B);}
+    if(sendSize>(int)SENDBUF.size()) SENDBUF.resize(sendSize);
+    if(recvSize>(int)RECVBUF.size()) RECVBUF.resize(recvSize);
+    int nrreq=0, nsreq=0; // сквозные счетчики реквестов сообщений
+    // инициируем получение сообщений
+    for(int p=0; p<B; p++){
+        int SZ = (RecvOffset[p+1]-RecvOffset[p])*VAR_NUM*sizeof(VarType); //размер сообщения
+        if(SZ<=0) continue; // если нечего слать - пропускаем соседа
+        int NB_ID = Neighbours[p]; // узнаем номер процесса данного соседа
+        int mpires = MPI_Irecv(&RECVBUF[RecvOffset[p]*VAR_NUM], SZ, MPI_CHAR,
+        NB_ID, 0, MCW, &(RREQ[nrreq]));
+        ASSERT(mpires==MPI_SUCCESS, "MPI_Irecv failed");
+        nrreq++;
+    }
+    // пакуем исходящие сообщения
+    #pragma omp parallel for // пакуем в параллельном режиме с целью ускорения (К.О.)
+        for(int i=0; i<sendCount; ++i){ // пакуем данные с интерфейса по единому списку
+        int ic = Send[i]; // номер ячейки на отправку.
+        int Ivar=0; // номер переменной в данной ячейке - по всем блокам
+        for(int iv=0; iv<nBlocks; ++iv){ // перебираем блоки блочных векторов
+        int varnum = VarNums[iv]; // число переменных в блоке в данном блочном векторе
+        VarType *v = VV[iv]; // указатель на данный блочный вектор
+        for(int ivar=0; ivar<varnum; ++ivar, ++Ivar) // пихаем данный блок в буфер
+            SENDBUF[i*VAR_NUM + Ivar] = v[ic*varnum + ivar];
+        }
+    }
+}
 
 
 void SpMv(int N, int*& IA, int*& JA, double*& A, double*& x, double*& ans){
@@ -668,54 +730,6 @@ void fill(int N, int N0, int*& IA, int*& JA, int*& L2G, double*& A, double*& b){
     // cout << "TEST 5" << endl;
 
     delete [] diag;
-}
-
-template <typename VarType> void Update(
-int nBlocks, // число блочных векторов, которые надо обновить
-VarType **VV, // массив указателей на эти блочные вектора (размера nBlocks)
-const int *VarNums, // массив с числом переменных в блоках каждого блочного вектора
-const tCommScheme &CS /*структура, описывающая схему обменов*/){
-    int *Send = CS.GetSendList(); // список ячеек на отправку по всем соседям
-    int *Recv = CS.GetRecvList(); // список ячеек на прием по всем соседям
-    int *SendOffset = CS.GetSendOffset(); // смещения списков по каждому соседу на отправку
-    int *RecvOffset = CS.GetRecvOffset(); // смещения списков по каждому соседу на прием
-    int *Neighbours = CS.GetListOfNeigbours(); // номера процессов соседей
-    MPI_Comm MCW = CS.GetMyComm(); // коммуникатор для данной группы (MPI_COMM_WORLD)
-
-    int sendCount=SendOffset[B]; // размер общего списка на отправку по всем соседям
-    int recvCount=RecvOffset[B]; // размер общего списка на прием по всем соседям
-    int sendSize = sendCount*VAR_NUM; // размеры общего буфера на отправку
-    int recvSize = recvCount*VAR_NUM; // размеры общего буфера на прием
-    static vector<VarType> SENDBUF, RECVBUF; // буферы на отправку и прием по всем соседям
-    static vector<MPI_Request> SREQ, RREQ; // реквесты для неблокирующих обменов
-    static vector<MPI_Status> SSTS, RSTS; // статусы для них же
-    // ресайзим, если надо
-    if(B>(int)SREQ.size()){SREQ.resize(B); RREQ.resize(B); SSTS.resize(B); RSTS.resize(B);}
-    if(sendSize>(int)SENDBUF.size()) SENDBUF.resize(sendSize);
-    if(recvSize>(int)RECVBUF.size()) RECVBUF.resize(recvSize);
-    int nrreq=0, nsreq=0; // сквозные счетчики реквестов сообщений
-    // инициируем получение сообщений
-    for(int p=0; p<B; p++){
-        int SZ = (RecvOffset[p+1]-RecvOffset[p])*VAR_NUM*sizeof(VarType); //размер сообщения
-        if(SZ<=0) continue; // если нечего слать - пропускаем соседа
-        int NB_ID = Neighbours[p]; // узнаем номер процесса данного соседа
-        int mpires = MPI_Irecv(&RECVBUF[RecvOffset[p]*VAR_NUM], SZ, MPI_CHAR,
-        NB_ID, 0, MCW, &(RREQ[nrreq]));
-        ASSERT(mpires==MPI_SUCCESS, "MPI_Irecv failed");
-        nrreq++;
-    }
-    // пакуем исходящие сообщения
-    #pragma omp parallel for // пакуем в параллельном режиме с целью ускорения (К.О.)
-        for(int i=0; i<sendCount; ++i){ // пакуем данные с интерфейса по единому списку
-        int ic = Send[i]; // номер ячейки на отправку.
-        int Ivar=0; // номер переменной в данной ячейке - по всем блокам
-        for(int iv=0; iv<nBlocks; ++iv){ // перебираем блоки блочных векторов
-        int varnum = VarNums[iv]; // число переменных в блоке в данном блочном векторе
-        VarType *v = VV[iv]; // указатель на данный блочный вектор
-        for(int ivar=0; ivar<varnum; ++ivar, ++Ivar) // пихаем данный блок в буфер
-            SENDBUF[i*VAR_NUM + Ivar] = v[ic*varnum + ivar];
-        }
-    }
 }
 
 tCommScheme com(int N, int N0, int P, int*& IA, int*& JA, int*& Part, int*& L2G, int*& G2L){
