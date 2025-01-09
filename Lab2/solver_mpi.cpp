@@ -26,6 +26,174 @@ int Crash(const char *fmt, ...) {
     return 0;
 }
 
+
+void SpMv(int N, int*& IA, int*& JA, double*& A, double*& x, double*& ans){
+    #pragma omp parallel for
+    for(int i = 0; i < N; ++i){
+        double cur_sum = 0;
+        for (int j = IA[i]; j < IA[i + 1]; ++j){
+            cur_sum += A[j] * x[JA[j]];
+        }
+        ans[i] = cur_sum;
+    }
+}
+
+double dot(int N, double*& x, double*& y){
+    double out = 0;
+    #pragma omp parallel reduction(+:out)
+    {
+        #pragma omp for
+        for (int i = 0; i < N; ++i){
+            out += x[i] * y[i];
+        }
+    }
+    return out;
+}
+
+void axpy(int N, double alpha, double*& x, double*& y, double*& ans) {
+    #pragma omp parallel for
+    for (int i = 0; i < N; ++i) {
+        ans[i] = alpha * x[i] + y[i];  
+    }
+}
+
+void vector_cp(int N, double*& dest, double*& src){
+    #pragma omp parallel for
+    for (int i = 0; i < N; ++i){
+        dest[i] = src[i];
+    }
+}
+
+void vector_fill(int N, double*& x, double alpha){
+    #pragma omp parallel for
+    for (int i = 0; i < N; ++i){
+        x[i] = alpha;
+    }
+}
+
+void get_M(int N, int*& IA, int*& JA, double*& A, double*& M){
+    #pragma omp parallel for
+    for (int i = 0; i < N; ++i){
+        for (int j = IA[i]; j < IA[i + 1]; ++j){
+            if (i == JA[j]){
+                M[j] = 1.0 / A[j];
+            }
+        }
+    }
+}
+
+double l2(int N, double*& x){
+    double res = 0;
+    for(int i = 0; i < N; ++i){
+        res += x[i] * x[i];
+    }
+    return sqrt(res);
+}
+
+double solve(int N, int N0, tCommScheme Com, int*& IA, int*& JA, double*& A, double*& b, double eps, int maxit, double*& x, int &n){
+    int k = 0;
+    double *x_k, *r_k, *M, *z_k, *p_k, *q_k, *x_k_prev, *p_k_prev, *r_k_prev, *tmp, ro_k, ro_k_local, ro_k_prev, beta_k, alpha_k, alpha_k_local, t, t_collect;
+    x_k = new double[N];
+    r_k = new double[N];
+    M = new double[IA[N0]];
+    z_k = new double[N];
+    p_k = new double[N];
+    q_k = new double[N];
+    x_k_prev = new double[N];
+    p_k_prev = new double[N];
+    r_k_prev = new double[N];
+    //tmp = new double[N];
+
+    vector_fill(N, x_k_prev, 0); // x_0
+    //vector_fill(N, x_k, 0); // for prev
+    vector_cp(N, r_k_prev, b); // r_0
+
+    // TEST
+    cout << "doubled_E: " << IA[N] << endl;
+    
+    // t_collect = 0;
+    // for(int i = 0; i < 100; ++i){
+    //     t = omp_get_wtime();
+    //     SpMv(N, IA, JA, M, r_k_prev, z_k);
+    //     t = omp_get_wtime() - t;
+    //     t_collect += t;
+    // }
+    // t_collect /= 100.0;
+    // cout << "SpMv took: " << setprecision(5) << t << " seconds" << endl;
+
+    // t_collect = 0;
+    // for(int i = 0; i < 10000; ++i){
+    //     t = omp_get_wtime();
+    //     axpy(N, 1.23, r_k_prev, x_k_prev, p_k);
+    //     t = omp_get_wtime() - t;
+    //     t_collect += t;
+    // }
+    // t_collect /= 10000.0;
+    // cout << "axpy took: " << setprecision(5) << t << " seconds" << endl;
+
+    // t_collect = 0;
+    // for(int i = 0; i < 1000; ++i){
+    //     t = omp_get_wtime();
+    //     dot(N, r_k_prev, x_k_prev);
+    //     t = omp_get_wtime() - t;
+    //     t_collect += t;
+    // }
+    // t_collect /= 1000.0;
+    // cout << "dot took: " << setprecision(5) << t << " seconds" << endl;
+
+
+    do{
+        ++k;
+        vector_fill(IA[N0], M, 0);
+        get_M(N0, IA, JA, A, M);
+        double** blocks = new double*[2];
+        blocks[0] = r_k_prev;
+        blocks[1] = p_k;
+        int* sizes = new int[2];
+        sizes[0] = N;
+        sizes[1] = N;
+        Update<double>(2, blocks, sizes, Com);
+        SpMv(N0, IA, JA, M, r_k_prev, z_k);
+        ro_k_local = dot(N, r_k_prev, z_k);
+        MPI_Allreduce(&ro_k_local, &ro_k, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        
+
+        if(k == 1){
+            vector_cp(N, p_k, z_k);
+            vector_cp(N, p_k_prev, p_k);
+        }
+        else{
+            beta_k = ro_k / ro_k_prev;
+            //vector_cp(N, tmp, p_k);
+            axpy(N, beta_k, p_k_prev, z_k, p_k);
+            vector_cp(N, p_k_prev, p_k);
+        }
+
+        SpMv(N0, IA, JA, A, p_k, q_k);
+        alpha_k_local = ro_k / dot(N, p_k, q_k);
+        MPI_Allreduce(&alpha_k_local, &alpha_k, 1, MPI_DOUBLE, MPI_COMM_WORLD);
+        //vector_cp(N, tmp, x_k);
+
+        axpy(N, alpha_k, p_k, x_k_prev, x_k);
+        vector_cp(N, x_k_prev, x_k);
+        axpy(N, -alpha_k, q_k, r_k_prev, r_k);
+        vector_cp(N, r_k_prev, r_k);
+
+        ro_k_prev = ro_k;
+    }
+    while(ro_k > eps * eps && k < maxit);
+
+    // TEST
+    // cout << "Number of iterations: " << k <<endl;
+
+    x = new double[N];
+    vector_cp(N, x, x_k);
+    n = k;
+
+    return l2(N, r_k);
+    //delete [] tmp;
+}
+
 int oldInd2New(int Nx, int Ny, int K1, int K2, int i, int j){
     int I, n, r, trian_cnt, new_I;
     int K = K1 + K2;
@@ -371,8 +539,188 @@ void fill(int N, int N0, int*& IA, int*& JA, int*& L2G, double*& A, double*& b){
     delete [] diag;
 }
 
-void com(int N, int N0, int*& IA, int*& JA, int*& Part, int*& L2G){
+class tCommScheme {
+private:
+    vector<int> Send;       // List of cells to send to all neighbors
+    vector<int> Recv;       // List of cells to receive from all neighbors
+    vector<int> SendOffset;     // Offsets for send lists for each neighbor
+    vector<int> RecvOffset;     // Offsets for receive lists for each neighbor
+    vector<int> Neighbours;     // List of neighbor process IDs
+    MPI_Comm MyComm;                 // MPI communicator for the group
 
+public:
+    // Constructor
+    tCommScheme(MPI_Comm comm = MPI_COMM_WORLD) : MyComm(comm) {}
+
+        // Getter for Send list
+    const int* GetSendList() const {
+        return Send.data();
+    }
+
+    // Getter for Recv list
+    const int* GetRecvList() const {
+        return Recv.data();
+    }
+
+    // Getter for SendOffset
+    const int* GetSendOffset() const {
+        return SendOffset.data();
+    }
+
+    // Getter for RecvOffset
+    const int* GetRecvOffset() const {
+        return RecvOffset.data();
+    }
+
+    // Getter for Neighbours
+    const int* GetListOfNeigbours() const {
+        return Neighbours.data();
+    }
+
+    // Getter for the MPI communicator
+    MPI_Comm GetMyComm() const {
+        return MyComm;
+    }
+
+    // Utility method to initialize the communication scheme
+    void Initialize(int N,
+                    int N0,
+                    int P,
+                    int*& IA,
+                    int *& JA,
+                    int *& Part,
+                    int *& L2G,
+                    int *& G2L)
+    {
+        // Clear existing data
+        // SendList.clear();
+        // RecvList.clear();
+        SendOffset.clear();
+        RecvOffset.clear();
+        Neighbours.clear();
+
+        // Temporary storage for neighbors
+        vector<vector<int>> SendToProcess;
+        vector<vector<int>> RecvFromProcess;
+        for(int i=0;i<P;++i){
+            SendToProcess.push_back(vector<int>());
+            RecvFromProcess.push_back(vector<int>());
+        }
+
+        for (int i = 0; i < N0; ++i){
+            for (int j = IA[i]; j < IA[i + 1]; ++j){
+                int p = Part[JA[j]];
+                if (p < 0){
+                    SendToProcess[-(p + 1)].push_back(i);
+                    RecvFromProcess[-(p+1)].push_back(JA[j]);
+                }
+            }
+        }
+
+        for (int p = 0; p < P; ++p){
+            if (!SendToProcess[p].empty()){
+                Neighbours.push_back(p);
+
+                vector<int> globalSend, globalRecv;
+                for (int i = 0; i < SendToProcess[p].size(); ++i) {
+                    int idx = SendToProcess[p][i];
+                    globalSend.push_back(L2G[idx]);
+                }
+                for (int i = 0; i < RecvFromProcess[p].size(); ++i) {
+                    int idx = RecvFromProcess[p][i];
+                    globalRecv.push_back(L2G[idx]);
+                }
+
+                sort(globalSend.begin(), globalSend.end());
+                sort(globalRecv.begin(), globalRecv.end());
+                globalSend.erase(unique(globalSend.begin(), globalSend.end()), globalSend.end());
+                globalRecv.erase(unique(globalRecv.begin(), globalRecv.end()), globalRecv.end());
+
+                vector<int> localSend, localRecv;
+                for (int i = 0; i < globalSend.size(); ++i) {
+                    int globalIdx = globalSend[i];
+                    localSend.push_back(G2L[globalIdx]);
+                }
+                for (int i = 0; i < globalRecv.size(); ++i) {
+                    int globalIdx = globalRecv[i];
+                    localRecv.push_back(G2L[globalIdx]);
+                }
+
+                SendToProcess[p] = move(localSend);
+                RecvFromProcess[p] = move(localRecv);
+            }
+        }
+
+        int send_ind = 0, recv_ind = 0;
+
+        for (int p = 0; p < Neighbours.size(); ++p){
+            SendOffset.push_back(send_ind);
+            RecvOffset.push_back(recv_ind);
+            for (int i = 0; i < SendToProcess[p].size(); ++i){
+                Send.push_back(SendToProcess[p][i]);
+                ++send_ind;
+            }
+            for(int i = 0; i < RecvFromProcess[p].size(); ++i){
+                Recv.push_back(RecvFromProcess[p][i]);
+                ++recv_ind;
+            }
+        }   
+
+    }
+};
+
+template <typename VarType> void Update(
+int nBlocks, // число блочных векторов, которые надо обновить
+VarType **VV, // массив указателей на эти блочные вектора (размера nBlocks)
+const int *VarNums, // массив с числом переменных в блоках каждого блочного вектора
+const tCommScheme &CS /*структура, описывающая схему обменов*/){
+    int *Send = CS.GetSendList(); // список ячеек на отправку по всем соседям
+    int *Recv = CS.GetRecvList(); // список ячеек на прием по всем соседям
+    int *SendOffset = CS.GetSendOffset(); // смещения списков по каждому соседу на отправку
+    int *RecvOffset = CS.GetRecvOffset(); // смещения списков по каждому соседу на прием
+    int *Neighbours = CS.GetListOfNeigbours(); // номера процессов соседей
+    MPI_Comm MCW = CS.GetMyComm(); // коммуникатор для данной группы (MPI_COMM_WORLD)
+
+    int sendCount=SendOffset[B]; // размер общего списка на отправку по всем соседям
+    int recvCount=RecvOffset[B]; // размер общего списка на прием по всем соседям
+    int sendSize = sendCount*VAR_NUM; // размеры общего буфера на отправку
+    int recvSize = recvCount*VAR_NUM; // размеры общего буфера на прием
+    static vector<VarType> SENDBUF, RECVBUF; // буферы на отправку и прием по всем соседям
+    static vector<MPI_Request> SREQ, RREQ; // реквесты для неблокирующих обменов
+    static vector<MPI_Status> SSTS, RSTS; // статусы для них же
+    // ресайзим, если надо
+    if(B>(int)SREQ.size()){SREQ.resize(B); RREQ.resize(B); SSTS.resize(B); RSTS.resize(B);}
+    if(sendSize>(int)SENDBUF.size()) SENDBUF.resize(sendSize);
+    if(recvSize>(int)RECVBUF.size()) RECVBUF.resize(recvSize);
+    int nrreq=0, nsreq=0; // сквозные счетчики реквестов сообщений
+    // инициируем получение сообщений
+    for(int p=0; p<B; p++){
+        int SZ = (RecvOffset[p+1]-RecvOffset[p])*VAR_NUM*sizeof(VarType); //размер сообщения
+        if(SZ<=0) continue; // если нечего слать - пропускаем соседа
+        int NB_ID = Neighbours[p]; // узнаем номер процесса данного соседа
+        int mpires = MPI_Irecv(&RECVBUF[RecvOffset[p]*VAR_NUM], SZ, MPI_CHAR,
+        NB_ID, 0, MCW, &(RREQ[nrreq]));
+        ASSERT(mpires==MPI_SUCCESS, "MPI_Irecv failed");
+        nrreq++;
+    }
+    // пакуем исходящие сообщения
+    #pragma omp parallel for // пакуем в параллельном режиме с целью ускорения (К.О.)
+        for(int i=0; i<sendCount; ++i){ // пакуем данные с интерфейса по единому списку
+        int ic = Send[i]; // номер ячейки на отправку.
+        int Ivar=0; // номер переменной в данной ячейке - по всем блокам
+        for(int iv=0; iv<nBlocks; ++iv){ // перебираем блоки блочных векторов
+        int varnum = VarNums[iv]; // число переменных в блоке в данном блочном векторе
+        VarType *v = VV[iv]; // указатель на данный блочный вектор
+        for(int ivar=0; ivar<varnum; ++ivar, ++Ivar) // пихаем данный блок в буфер
+            SENDBUF[i*VAR_NUM + Ivar] = v[ic*varnum + ivar];
+        }
+    }
+}
+
+tCommScheme com(int N, int N0, int P, int*& IA, int*& JA, int*& Part, int*& L2G, int*& G2L){
+    tCommScheme out = tCommScheme(MPI_COMM_WORLD);
+    out.Initialize(N, N0, P, IA, JA, Part, L2G, G2L);
+    return out;
 }
 
 int main(int argc, char** argv){
@@ -444,6 +792,16 @@ int main(int argc, char** argv){
     t = omp_get_wtime() - t;
     logFile << setprecision(5) << "Fill took: " << t << " seconds" << endl;
 
+    t = omp_get_wtime();
+    tCommScheme Com = com(N, N0, NumProc, IA, JA, Part, L2G, G2L);
+    t = omp_get_wtime() - t;
+    logFile << setprecision(5) << "com took: " << t << " seconds" << endl;
+
+    t = omp_get_wtime();
+    res = solve(N, N0, Com, IA, JA, A, b, EPS, MAXIT, x, n);
+    t = omp_get_wtime() - t;
+
+    logFile << "Solve took: " << setprecision(5) << t << " seconds" << endl;
     // logFile << "start free" << endl;
     // delete [] IA;
     // logFile << "good IA" << endl;
