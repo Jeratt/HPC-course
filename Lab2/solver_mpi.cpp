@@ -165,7 +165,7 @@ template <typename VarType> void Update(
 int nBlocks, // число блочных векторов, которые надо обновить
 VarType **VV, // массив указателей на эти блочные вектора (размера nBlocks)
 const int *VarNums, // массив с числом переменных в блоках каждого блочного вектора
-const tCommScheme &CS /*структура, описывающая схему обменов*/){
+tCommScheme &CS /*структура, описывающая схему обменов*/){
     const int B = CS.GetNumOfNeighbours(); // число соседей
     if(B==0) return; // нет соседей - нет проблем
     int VAR_NUM = 0; // общее число переменных во всех блоках
