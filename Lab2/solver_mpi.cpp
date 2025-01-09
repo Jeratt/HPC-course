@@ -349,6 +349,7 @@ double solve(int N, int N0, int NumProc, tCommScheme Com, int*& IA, int*& JA, do
         ro_k_local = dot(N, r_k_prev, z_k);
         MPI_Allreduce(&ro_k_local, &ro_k, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
         
+        cout << "TEST SOLVE 1" << endl;
 
         if(k == 1){
             vector_cp(N, p_k, z_k);
@@ -361,6 +362,8 @@ double solve(int N, int N0, int NumProc, tCommScheme Com, int*& IA, int*& JA, do
             vector_cp(N, p_k_prev, p_k);
         }
 
+        cout << "TEST SOLVE 2" << endl;
+
         SpMv(N0, IA, JA, A, p_k, q_k);
         alpha_k_local = ro_k / dot(N, p_k, q_k);
         MPI_Allreduce(&alpha_k_local, &alpha_k, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -372,6 +375,8 @@ double solve(int N, int N0, int NumProc, tCommScheme Com, int*& IA, int*& JA, do
         vector_cp(N, r_k_prev, r_k);
 
         ro_k_prev = ro_k;
+
+        cout << "TEST SOLVE 3" << endl;
     }
     while(ro_k > eps * eps && k < maxit);
 
