@@ -41,31 +41,31 @@ public:
     tCommScheme(MPI_Comm comm = MPI_COMM_WORLD) : MyComm(comm) {}
 
         // Getter for Send list
-    const int* GetSendList() const {
+    int* GetSendList() {
         return Send.data();
     }
 
     // Getter for Recv list
-    const int* GetRecvList() const {
+    int* GetRecvList() {
         return Recv.data();
     }
 
     // Getter for SendOffset
-    const int* GetSendOffset() const {
+    int* GetSendOffset() {
         return SendOffset.data();
     }
 
     // Getter for RecvOffset
-    const int* GetRecvOffset() const {
+    int* GetRecvOffset() {
         return RecvOffset.data();
     }
 
     // Getter for Neighbours
-    const int* GetListOfNeigbours() const {
+    int* GetListOfNeigbours() {
         return Neighbours.data();
     }
 
-    const int GetNumOfNeighbours() const {
+    int GetNumOfNeighbours() {
         return Neighbours.size();
     }
 
