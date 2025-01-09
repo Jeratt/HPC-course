@@ -279,9 +279,9 @@ double l2(int N, double*& x){
     return sqrt(res);
 }
 
-double solve(int N, int N0, tCommScheme Com, int*& IA, int*& JA, double*& A, double*& b, double eps, int maxit, double*& x, int &n){
+double solve(int N, int N0, int NumProc, tCommScheme Com, int*& IA, int*& JA, double*& A, double*& b, double eps, int maxit, double*& x, int &n){
     int k = 0;
-    double *x_k, *r_k, *M, *z_k, *p_k, *q_k, *x_k_prev, *p_k_prev, *r_k_prev, *tmp, ro_k, ro_k_local, ro_k_prev, beta_k, alpha_k, alpha_k_local, t, t_collect;
+    double *x_k, *r_k, *M, *z_k, *p_k, *q_k, *x_k_prev, *p_k_prev, *r_k_prev, *tmp, ro_k, ro_k_local, ro_k_prev, beta_k, alpha_k, alpha_k_local, t, t_collect, t_collect_local;
     x_k = new double[N];
     r_k = new double[N];
     M = new double[IA[N0]];
@@ -300,35 +300,38 @@ double solve(int N, int N0, tCommScheme Com, int*& IA, int*& JA, double*& A, dou
     // TEST
     cout << "doubled_E: " << IA[N] << endl;
     
-    // t_collect = 0;
-    // for(int i = 0; i < 100; ++i){
-    //     t = omp_get_wtime();
-    //     SpMv(N, IA, JA, M, r_k_prev, z_k);
-    //     t = omp_get_wtime() - t;
-    //     t_collect += t;
-    // }
-    // t_collect /= 100.0;
-    // cout << "SpMv took: " << setprecision(5) << t << " seconds" << endl;
+    t_collect_local = 0;
+    for(int i = 0; i < 100; ++i){
+        t = omp_get_wtime();
+        SpMv(N, IA, JA, M, r_k_prev, z_k);
+        t = omp_get_wtime() - t;
+        t_collect_local += t;
+    }
+    t_collect_local /= 100.0;
+    MPI_Allreduce(&t_collect_local, &t_collect, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    cout << "SpMv took: " << setprecision(5) << t_collect / NumProc << " seconds" << endl;
 
-    // t_collect = 0;
-    // for(int i = 0; i < 10000; ++i){
-    //     t = omp_get_wtime();
-    //     axpy(N, 1.23, r_k_prev, x_k_prev, p_k);
-    //     t = omp_get_wtime() - t;
-    //     t_collect += t;
-    // }
-    // t_collect /= 10000.0;
-    // cout << "axpy took: " << setprecision(5) << t << " seconds" << endl;
+    t_collect_local = 0;
+    for(int i = 0; i < 1000; ++i){
+        t = omp_get_wtime();
+        axpy(N, 1.23, r_k_prev, x_k_prev, p_k);
+        t = omp_get_wtime() - t;
+        t_collect_local += t;
+    }
+    t_collect_local /= 1000.0;
+    MPI_Allreduce(&t_collect_local, &t_collect, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    cout << "axpy took: " << setprecision(5) << t_collect / NumProc << " seconds" << endl;
 
-    // t_collect = 0;
-    // for(int i = 0; i < 1000; ++i){
-    //     t = omp_get_wtime();
-    //     dot(N, r_k_prev, x_k_prev);
-    //     t = omp_get_wtime() - t;
-    //     t_collect += t;
-    // }
-    // t_collect /= 1000.0;
-    // cout << "dot took: " << setprecision(5) << t << " seconds" << endl;
+    t_collect_local = 0;
+    for(int i = 0; i < 100; ++i){
+        t = omp_get_wtime();
+        dot(N, r_k_prev, x_k_prev);
+        t = omp_get_wtime() - t;
+        t_collect_local += t;
+    }
+    t_collect_local /= 100.0;
+    MPI_Allreduce(&t_collect_local, &t_collect, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    cout << "dot took: " << setprecision(5) << t_collect / NumProc << " seconds" << endl;
 
 
     do{
@@ -809,7 +812,7 @@ int main(int argc, char** argv){
     logFile << setprecision(5) << "com took: " << t << " seconds" << endl;
 
     t = omp_get_wtime();
-    res = solve(N, N0, Com, IA, JA, A, b, EPS, MAXIT, x, n);
+    res = solve(N, N0, NumProc, Com, IA, JA, A, b, EPS, MAXIT, x, n);
     t = omp_get_wtime() - t;
 
     logFile << "Solve took: " << setprecision(5) << t << " seconds" << endl;
