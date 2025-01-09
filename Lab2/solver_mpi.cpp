@@ -797,25 +797,25 @@ int main(int argc, char** argv){
     t = omp_get_wtime();
     generate(MyID, Nx, Ny, K1, K2, Px, Py, N, N0, Part, L2G, G2L, IA, JA);
     t = omp_get_wtime() - t;
-    logFile << setprecision(5) << "Generate took: " << t << " seconds" << endl;
+    cout << setprecision(5) << "Generate took: " << t << " seconds" << endl;
 
     logFile << "N0:" << N0 << endl;
 
     t = omp_get_wtime();
     fill(N, N0, IA, JA, L2G, A, b);
     t = omp_get_wtime() - t;
-    logFile << setprecision(5) << "Fill took: " << t << " seconds" << endl;
+    cout << setprecision(5) << "Fill took: " << t << " seconds" << endl;
 
     t = omp_get_wtime();
     tCommScheme Com = com(N, N0, NumProc, IA, JA, Part, L2G, G2L);
     t = omp_get_wtime() - t;
-    logFile << setprecision(5) << "com took: " << t << " seconds" << endl;
+    cout << setprecision(5) << "com took: " << t << " seconds" << endl;
 
     t = omp_get_wtime();
     res = solve(N, N0, NumProc, Com, IA, JA, A, b, EPS, MAXIT, x, n);
     t = omp_get_wtime() - t;
 
-    logFile << "Solve took: " << setprecision(5) << t << " seconds" << endl;
+    cout << "Solve took: " << setprecision(5) << t << " seconds" << endl;
     // logFile << "start free" << endl;
     // delete [] IA;
     // logFile << "good IA" << endl;
