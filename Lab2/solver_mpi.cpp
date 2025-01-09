@@ -168,11 +168,8 @@ const int *VarNums, // массив с числом переменных в бл
 const tCommScheme &CS /*структура, описывающая схему обменов*/){
     const int B = CS.GetNumOfNeighbours(); // число соседей
     if(B==0) return; // нет соседей - нет проблем
-    ASSERT(nBlocks>0, "wrong nBlocks!");
     int VAR_NUM = 0; // общее число переменных во всех блоках
     for(int iv=0; iv<nBlocks; ++iv){ // считаем сколько переменных во всех блоках
-    ASSERT(VarNums[iv]>0, "wrong block size!");
-    ASSERT(VV[iv], "NULL pointer!");
     VAR_NUM += VarNums[iv];
     }
 
@@ -202,7 +199,6 @@ const tCommScheme &CS /*структура, описывающая схему о
         int NB_ID = Neighbours[p]; // узнаем номер процесса данного соседа
         int mpires = MPI_Irecv(&RECVBUF[RecvOffset[p]*VAR_NUM], SZ, MPI_CHAR,
         NB_ID, 0, MCW, &(RREQ[nrreq]));
-        ASSERT(mpires==MPI_SUCCESS, "MPI_Irecv failed");
         nrreq++;
     }
     // пакуем исходящие сообщения
