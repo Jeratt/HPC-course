@@ -335,9 +335,11 @@ double solve(int N, int N0, int NumProc, tCommScheme Com, int*& IA, int*& JA, do
 
 
     do{
+        cout << "TEST SOLVE 0" << endl;
         ++k;
         vector_fill(IA[N0], M, 0);
         get_M(N0, IA, JA, A, M);
+        cout << "TEST SOLVE 00" << endl;
         double** blocks = new double*[2];
         blocks[0] = r_k_prev;
         blocks[1] = p_k;
@@ -345,8 +347,10 @@ double solve(int N, int N0, int NumProc, tCommScheme Com, int*& IA, int*& JA, do
         sizes[0] = N;
         sizes[1] = N;
         Update<double>(2, blocks, sizes, Com);
+        cout << "TEST SOLVE 000" << endl;
         SpMv(N0, IA, JA, M, r_k_prev, z_k);
         ro_k_local = dot(N, r_k_prev, z_k);
+        cout << "TEST SOLVE 0000" << endl;
         MPI_Allreduce(&ro_k_local, &ro_k, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
         
         cout << "TEST SOLVE 1" << endl;
