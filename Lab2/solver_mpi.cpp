@@ -7,6 +7,7 @@
 #include <cstdarg>
 #include <cstdlib> 
 #include <iomanip>
+#include <vector>
 
 #define crash(...) exit(Crash(__VA_ARGS__))
 
@@ -25,6 +26,136 @@ int Crash(const char *fmt, ...) {
     MPI_Abort(MPI_COMM_WORLD, -1);
     return 0;
 }
+
+class tCommScheme {
+private:
+    vector<int> Send;       // List of cells to send to all neighbors
+    vector<int> Recv;       // List of cells to receive from all neighbors
+    vector<int> SendOffset;     // Offsets for send lists for each neighbor
+    vector<int> RecvOffset;     // Offsets for receive lists for each neighbor
+    vector<int> Neighbours;     // List of neighbor process IDs
+    MPI_Comm MyComm;                 // MPI communicator for the group
+
+public:
+    // Constructor
+    tCommScheme(MPI_Comm comm = MPI_COMM_WORLD) : MyComm(comm) {}
+
+        // Getter for Send list
+    const int* GetSendList() const {
+        return Send.data();
+    }
+
+    // Getter for Recv list
+    const int* GetRecvList() const {
+        return Recv.data();
+    }
+
+    // Getter for SendOffset
+    const int* GetSendOffset() const {
+        return SendOffset.data();
+    }
+
+    // Getter for RecvOffset
+    const int* GetRecvOffset() const {
+        return RecvOffset.data();
+    }
+
+    // Getter for Neighbours
+    const int* GetListOfNeigbours() const {
+        return Neighbours.data();
+    }
+
+    // Getter for the MPI communicator
+    MPI_Comm GetMyComm() const {
+        return MyComm;
+    }
+
+    // Utility method to initialize the communication scheme
+    void Initialize(int N,
+                    int N0,
+                    int P,
+                    int*& IA,
+                    int *& JA,
+                    int *& Part,
+                    int *& L2G,
+                    int *& G2L)
+    {
+        // Clear existing data
+        // SendList.clear();
+        // RecvList.clear();
+        SendOffset.clear();
+        RecvOffset.clear();
+        Neighbours.clear();
+
+        // Temporary storage for neighbors
+        vector<vector<int>> SendToProcess;
+        vector<vector<int>> RecvFromProcess;
+        for(int i=0;i<P;++i){
+            SendToProcess.push_back(vector<int>());
+            RecvFromProcess.push_back(vector<int>());
+        }
+
+        for (int i = 0; i < N0; ++i){
+            for (int j = IA[i]; j < IA[i + 1]; ++j){
+                int p = Part[JA[j]];
+                if (p < 0){
+                    SendToProcess[-(p + 1)].push_back(i);
+                    RecvFromProcess[-(p+1)].push_back(JA[j]);
+                }
+            }
+        }
+
+        for (int p = 0; p < P; ++p){
+            if (!SendToProcess[p].empty()){
+                Neighbours.push_back(p);
+
+                vector<int> globalSend, globalRecv;
+                for (int i = 0; i < SendToProcess[p].size(); ++i) {
+                    int idx = SendToProcess[p][i];
+                    globalSend.push_back(L2G[idx]);
+                }
+                for (int i = 0; i < RecvFromProcess[p].size(); ++i) {
+                    int idx = RecvFromProcess[p][i];
+                    globalRecv.push_back(L2G[idx]);
+                }
+
+                sort(globalSend.begin(), globalSend.end());
+                sort(globalRecv.begin(), globalRecv.end());
+                globalSend.erase(unique(globalSend.begin(), globalSend.end()), globalSend.end());
+                globalRecv.erase(unique(globalRecv.begin(), globalRecv.end()), globalRecv.end());
+
+                vector<int> localSend, localRecv;
+                for (int i = 0; i < globalSend.size(); ++i) {
+                    int globalIdx = globalSend[i];
+                    localSend.push_back(G2L[globalIdx]);
+                }
+                for (int i = 0; i < globalRecv.size(); ++i) {
+                    int globalIdx = globalRecv[i];
+                    localRecv.push_back(G2L[globalIdx]);
+                }
+
+                SendToProcess[p] = move(localSend);
+                RecvFromProcess[p] = move(localRecv);
+            }
+        }
+
+        int send_ind = 0, recv_ind = 0;
+
+        for (int p = 0; p < Neighbours.size(); ++p){
+            SendOffset.push_back(send_ind);
+            RecvOffset.push_back(recv_ind);
+            for (int i = 0; i < SendToProcess[p].size(); ++i){
+                Send.push_back(SendToProcess[p][i]);
+                ++send_ind;
+            }
+            for(int i = 0; i < RecvFromProcess[p].size(); ++i){
+                Recv.push_back(RecvFromProcess[p][i]);
+                ++recv_ind;
+            }
+        }   
+
+    }
+};
 
 
 void SpMv(int N, int*& IA, int*& JA, double*& A, double*& x, double*& ans){
@@ -171,7 +302,7 @@ double solve(int N, int N0, tCommScheme Com, int*& IA, int*& JA, double*& A, dou
 
         SpMv(N0, IA, JA, A, p_k, q_k);
         alpha_k_local = ro_k / dot(N, p_k, q_k);
-        MPI_Allreduce(&alpha_k_local, &alpha_k, 1, MPI_DOUBLE, MPI_COMM_WORLD);
+        MPI_Allreduce(&alpha_k_local, &alpha_k, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
         //vector_cp(N, tmp, x_k);
 
         axpy(N, alpha_k, p_k, x_k_prev, x_k);
@@ -538,136 +669,6 @@ void fill(int N, int N0, int*& IA, int*& JA, int*& L2G, double*& A, double*& b){
 
     delete [] diag;
 }
-
-class tCommScheme {
-private:
-    vector<int> Send;       // List of cells to send to all neighbors
-    vector<int> Recv;       // List of cells to receive from all neighbors
-    vector<int> SendOffset;     // Offsets for send lists for each neighbor
-    vector<int> RecvOffset;     // Offsets for receive lists for each neighbor
-    vector<int> Neighbours;     // List of neighbor process IDs
-    MPI_Comm MyComm;                 // MPI communicator for the group
-
-public:
-    // Constructor
-    tCommScheme(MPI_Comm comm = MPI_COMM_WORLD) : MyComm(comm) {}
-
-        // Getter for Send list
-    const int* GetSendList() const {
-        return Send.data();
-    }
-
-    // Getter for Recv list
-    const int* GetRecvList() const {
-        return Recv.data();
-    }
-
-    // Getter for SendOffset
-    const int* GetSendOffset() const {
-        return SendOffset.data();
-    }
-
-    // Getter for RecvOffset
-    const int* GetRecvOffset() const {
-        return RecvOffset.data();
-    }
-
-    // Getter for Neighbours
-    const int* GetListOfNeigbours() const {
-        return Neighbours.data();
-    }
-
-    // Getter for the MPI communicator
-    MPI_Comm GetMyComm() const {
-        return MyComm;
-    }
-
-    // Utility method to initialize the communication scheme
-    void Initialize(int N,
-                    int N0,
-                    int P,
-                    int*& IA,
-                    int *& JA,
-                    int *& Part,
-                    int *& L2G,
-                    int *& G2L)
-    {
-        // Clear existing data
-        // SendList.clear();
-        // RecvList.clear();
-        SendOffset.clear();
-        RecvOffset.clear();
-        Neighbours.clear();
-
-        // Temporary storage for neighbors
-        vector<vector<int>> SendToProcess;
-        vector<vector<int>> RecvFromProcess;
-        for(int i=0;i<P;++i){
-            SendToProcess.push_back(vector<int>());
-            RecvFromProcess.push_back(vector<int>());
-        }
-
-        for (int i = 0; i < N0; ++i){
-            for (int j = IA[i]; j < IA[i + 1]; ++j){
-                int p = Part[JA[j]];
-                if (p < 0){
-                    SendToProcess[-(p + 1)].push_back(i);
-                    RecvFromProcess[-(p+1)].push_back(JA[j]);
-                }
-            }
-        }
-
-        for (int p = 0; p < P; ++p){
-            if (!SendToProcess[p].empty()){
-                Neighbours.push_back(p);
-
-                vector<int> globalSend, globalRecv;
-                for (int i = 0; i < SendToProcess[p].size(); ++i) {
-                    int idx = SendToProcess[p][i];
-                    globalSend.push_back(L2G[idx]);
-                }
-                for (int i = 0; i < RecvFromProcess[p].size(); ++i) {
-                    int idx = RecvFromProcess[p][i];
-                    globalRecv.push_back(L2G[idx]);
-                }
-
-                sort(globalSend.begin(), globalSend.end());
-                sort(globalRecv.begin(), globalRecv.end());
-                globalSend.erase(unique(globalSend.begin(), globalSend.end()), globalSend.end());
-                globalRecv.erase(unique(globalRecv.begin(), globalRecv.end()), globalRecv.end());
-
-                vector<int> localSend, localRecv;
-                for (int i = 0; i < globalSend.size(); ++i) {
-                    int globalIdx = globalSend[i];
-                    localSend.push_back(G2L[globalIdx]);
-                }
-                for (int i = 0; i < globalRecv.size(); ++i) {
-                    int globalIdx = globalRecv[i];
-                    localRecv.push_back(G2L[globalIdx]);
-                }
-
-                SendToProcess[p] = move(localSend);
-                RecvFromProcess[p] = move(localRecv);
-            }
-        }
-
-        int send_ind = 0, recv_ind = 0;
-
-        for (int p = 0; p < Neighbours.size(); ++p){
-            SendOffset.push_back(send_ind);
-            RecvOffset.push_back(recv_ind);
-            for (int i = 0; i < SendToProcess[p].size(); ++i){
-                Send.push_back(SendToProcess[p][i]);
-                ++send_ind;
-            }
-            for(int i = 0; i < RecvFromProcess[p].size(); ++i){
-                Recv.push_back(RecvFromProcess[p][i]);
-                ++recv_ind;
-            }
-        }   
-
-    }
-};
 
 template <typename VarType> void Update(
 int nBlocks, // число блочных векторов, которые надо обновить
