@@ -81,8 +81,8 @@ public:
         RecvOffset.clear();
         Neighbours.clear();
 
-        vector<vector<int>> SendToProcess;
-        vector<vector<int>> RecvFromProcess;
+        vector< vector<int> > SendToProcess;
+        vector< vector<int> > RecvFromProcess;
         for(int i=0;i<P;++i){
             SendToProcess.push_back(vector<int>());
             RecvFromProcess.push_back(vector<int>());
@@ -181,8 +181,6 @@ const int B = CS.GetNumOfNeighbours(); // число соседей
         int NB_ID = Neighbours[p]; // узнаем номер процесса данного соседа
         int mpires = MPI_Irecv(&RECVBUF[RecvOffset[p]*sizeof(VarType)], SZ, MPI_CHAR,
         NB_ID, 0, MCW, &(REQ[nreq]));
-        ASSERT(mpires==MPI_SUCCESS, "MPI_Irecv failed");
-        //ASSERT - какой-то макрос проверки-авоста, замените на ваш способ проверки
         nreq++;
     }
     // пакуем данные с интерфейса по единому списку сразу по всем соседям
@@ -197,12 +195,10 @@ const int B = CS.GetNumOfNeighbours(); // число соседей
         int NB_ID = Neighbours[p]; // узнаем номер процесса данного соседа
         int mpires = MPI_Isend(&SENDBUF[SendOffset[p]*sizeof(VarType)], SZ, MPI_CHAR,
         NB_ID, 0, MCW, &(REQ[nreq]));
-        ASSERT(mpires==MPI_SUCCESS, "MPI_Isend failed");
         nreq++;
     }
     if(nreq>0){ // ждем завершения всех обменов
     int mpires = MPI_Waitall(nreq, &REQ[0], &STS[0]);
-    ASSERT(mpires==MPI_SUCCESS, "MPI_Waitall failed");
     }
     // разбираем данные с гало ячеек по единому списку сразу по всем соседям
     #pragma omp parallel for
