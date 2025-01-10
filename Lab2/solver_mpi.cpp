@@ -156,10 +156,15 @@ const int B = CS.GetNumOfNeighbours(); // число соседей
     if(B==0) return; // нет соседей - нет проблем
     // tCommScheme - какая-то структура, замените ее на ваш вариант
     // приведем все к POD типам и неймингу, как было в тексте выше
+    cout << "Update TEST 1" << endl;
     int *Send = CS.GetSendList(); // список ячеек на отправку по всем соседям
+    cout << "Update TEST 2" << endl;
     int *Recv = CS.GetRecvList(); // список ячеек на прием по всем соседям
+    cout << "Update TEST 3" << endl;
     int *SendOffset = CS.GetSendOffset(); // смещения списков по каждому соседу на отправку
+    cout << "Update TEST 4" << endl;
     int *RecvOffset = CS.GetRecvOffset(); // смещения списков по каждому соседу на прием
+    cout << "Update TEST 5" << endl;
     int *Neighbours = CS.GetListOfNeigbours(); // номера процессов соседей
     MPI_Comm MCW = CS.GetMyComm(); // коммуникатор для данной группы (MPI_COMM_WORLD)
     int sendCount=SendOffset[B]; // размер общего списка на отправку по всем соседям
