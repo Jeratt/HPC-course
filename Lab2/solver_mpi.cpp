@@ -170,6 +170,7 @@ const int B = CS.GetNumOfNeighbours(); // число соседей
     static vector<MPI_Request> REQ; // реквесты для неблокирующих обменов
     static vector<MPI_Status> STS; // статусы для неблокирующих обменов
     // ресайзим, если надо
+    cout << "Update TEST" << endl;
     if(2*B > (int)REQ.size()){ REQ.resize(2*B); STS.resize(2*B); }
     if(sendCount>(int)SENDBUF.size()) SENDBUF.resize(sendCount);
     if(recvCount>(int)RECVBUF.size()) RECVBUF.resize(recvCount);
@@ -183,6 +184,7 @@ const int B = CS.GetNumOfNeighbours(); // число соседей
         NB_ID, 0, MCW, &(REQ[nreq]));
         nreq++;
     }
+    cout << "Update TEST 2" << endl;
     // пакуем данные с интерфейса по единому списку сразу по всем соседям
     #pragma omp parallel for // в параллельном режиме с целью ускорения (К.О.)
     for(int i=0; i<sendCount; ++i){
